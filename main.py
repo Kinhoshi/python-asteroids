@@ -37,6 +37,7 @@ def main():
                 print("Game over!")
                 sys.exit()
             for bullet in shots:
+                ship.bullet_count = len(shots)
                 if current_asteroid.collides_with(bullet):
                     log_event("asteroid_shot")
                     current_asteroid.split()

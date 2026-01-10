@@ -8,6 +8,7 @@ class Player(CircleShape):
         super().__init__(x, y, PLAYER_RADIUS)
         self.rotation = 0
         self.cooldown_timer = 0
+        self.bullet_count = 0
 
 
     def triangle(self):
@@ -33,6 +34,7 @@ class Player(CircleShape):
         self.rotation += (PLAYER_TURN_SPEED * dt)
 
     def update(self, dt):
+        super().update(dt)
         self.cooldown_timer -= dt
         keys = pygame.key.get_pressed()
 
@@ -48,14 +50,13 @@ class Player(CircleShape):
         if keys[pygame.K_s] or keys[pygame.K_DOWN]:
             self.move(-dt)
 
-        if self.cooldown_timer > 0:
+        if self.cooldown_timer > 0 or self.bullet_count == PLAYER_MAX_BULLETS_ON_SCREEN:
             pass
         else:
             if pygame.KEYDOWN and keys[pygame.K_SPACE]:
                 self.shoot()
                 self.cooldown_timer = PLAYER_SHOOT_COOLDOWN_SECONDS
-        if keys[pygame.K_ESCAPE]:
-            sys.exit()
+                self.bullet_count += 1
 
     def shoot(self):
         bullet = Shot(self.position.x, self.position.y, SHOT_RADIUS)

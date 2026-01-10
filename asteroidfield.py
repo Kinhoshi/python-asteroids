@@ -33,6 +33,10 @@ class AsteroidField(pygame.sprite.Sprite):
         self.spawn_timer = 0.0
 
     def spawn(self, radius, position, velocity):
+        existing_asteroid = pygame.sprite.Group()
+        for asteroid in existing_asteroid:
+            if asteroid.position.distance_to(position) <= asteroid.radius + radius:
+                pass
         asteroid = Asteroid(position.x, position.y, radius)
         asteroid.velocity = velocity
 

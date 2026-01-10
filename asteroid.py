@@ -7,14 +7,20 @@ import random
 class Asteroid(CircleShape):
     def __init__(self, x, y, radius):
         super().__init__(x, y, radius)
+        self.color = None
+        value = random.randint(0, 10)
+        if value == 10:
+            self.color == "gold4"
+        self.color = "gray" + f"{random.randint(20, 100)}"
 
     def draw(self, screen):
         width = LINE_WIDTH
         center = self.position
         radius = self.radius
-        pygame.draw.circle(screen, "white", center, radius, width)
+        pygame.draw.circle(screen, self.color, center, radius, width)
 
     def update(self, dt):
+        super().update(dt)
         self.position += (self.velocity * dt)
 
     def split(self):
