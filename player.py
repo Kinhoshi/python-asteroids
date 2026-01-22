@@ -62,3 +62,29 @@ class Player(CircleShape):
         bullet = Shot(self.position.x, self.position.y, SHOT_RADIUS)
         bullet.velocity = pygame.Vector2(0, 1).rotate(self.rotation)
         bullet.velocity *= PLAYER_SHOOT_SPEED
+
+    def collides_with(self, other):
+       triangle_points = self.triangle()
+       asteroid_pos = other.position
+       inside = self.point_in_triangle(asteroid_pos, triangle_points[0], triangle_points[1], triangle_points[2])
+       if inside:
+           pass
+        
+
+    def point_in_triangle(self, p, a, b, c):
+       ab = b - a
+       ap = p - a
+
+       bc = c - b
+       bp = p - b
+
+       ca = a - c
+       cp = p - c
+
+       cross1 = ab.cross(ap)
+       cross2 = bc.cross(bp)
+       cross3 = ca.cross(cp)
+
+       if (cross1 > 0 and cross2 > 0 and cross3 > 0) or (cross1 < 0 and cross2 < 0 and cross3 < 0):
+           return True
+       return False
