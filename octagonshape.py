@@ -21,7 +21,7 @@ class OctagonShape(pygame.sprite.Sprite):
         color = self.color
         points = self.get_world_vertices()
         width = LINE_WIDTH
-        pygame.draw.polygon(screen, color, points, width)
+        pygame.draw.polygon(screen, color, points, 0)
 
     def update(self, dt):
         if self.position.x > SCREEN_WIDTH:
@@ -32,9 +32,6 @@ class OctagonShape(pygame.sprite.Sprite):
             self.position.y -= SCREEN_HEIGHT
         if self.position.y < 0:
             self.position.y += SCREEN_HEIGHT
-
-    #def collides_with(self, other):
-     #   raise NotImplementedError("Asteroid collision detection not implemented yet.")
 
     def octagon(self):
         points = []
@@ -100,8 +97,8 @@ class OctagonShape(pygame.sprite.Sprite):
             minA, maxA = self.project_onto_axis(axis)
             minB, maxB = other.project_onto_axis(axis)
 
-        if not self.overlaps(minA, maxA, minB, maxB):
-            return False
+            if not self.overlaps(minA, maxA, minB, maxB):
+                return False
 
         return True
 
@@ -111,5 +108,3 @@ class OctagonShape(pygame.sprite.Sprite):
         if not other.overlaps_on_all_axes(self):
             return False
         return True
-
-

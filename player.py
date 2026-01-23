@@ -9,6 +9,7 @@ class Player(CircleShape):
         self.rotation = 0
         self.cooldown_timer = 0
         self.bullet_count = 0
+        self.time_alive = 0
 
 
     def triangle(self):
@@ -64,11 +65,12 @@ class Player(CircleShape):
         bullet.velocity *= PLAYER_SHOOT_SPEED
 
     def collides_with(self, other):
-       triangle_points = self.triangle()
-       asteroid_pos = other.position
-       inside = self.point_in_triangle(asteroid_pos, triangle_points[0], triangle_points[1], triangle_points[2])
-       if inside:
-           pass
+        triangle_points = self.triangle()
+        asteroid_pos = other.position
+        inside = self.point_in_triangle(asteroid_pos, triangle_points[0], triangle_points[1], triangle_points[2])
+        if inside:
+            return True
+        return False
         
 
     def point_in_triangle(self, p, a, b, c):

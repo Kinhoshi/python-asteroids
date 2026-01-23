@@ -26,6 +26,6 @@ class StarField:
                 radius = random.randint(1, STAR_MAX_RADIUS)
                 position = pygame.Vector2(x, y)
                 
-                if not any(star.position.distance_to(position) < star.radius + radius for star in Star.containers[0]):
+                if not any(star.position.distance_to(position) < (star.radius + radius) * 2 for star in Star.containers[0]):
                     Star(x, y, radius)
                     break
