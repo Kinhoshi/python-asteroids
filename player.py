@@ -1,5 +1,6 @@
 from circleshape import *
 from constants import *
+from config import GameOptions
 from shot import *
 import pygame
 
@@ -10,6 +11,7 @@ class Player(CircleShape):
         self.cooldown_timer = 0
         self.bullet_count = 0
         self.time_alive = 0
+        self.width = getattr(self, "width", LINE_WIDTH)
 
 
     def triangle(self):
@@ -21,9 +23,8 @@ class Player(CircleShape):
         return [a, b, c]
     
     def draw(self, screen):
-        width = LINE_WIDTH
         points = self.triangle()
-        pygame.draw.polygon(screen, "white", points, width)
+        pygame.draw.polygon(screen, "white", points, self.width)
 
     def move(self, dt):
         unit_vector = pygame.Vector2(0, 1)
@@ -38,6 +39,8 @@ class Player(CircleShape):
         super().update(dt)
         self.cooldown_timer -= dt
         keys = pygame.key.get_pressed()
+        configurable_options = GameOptions()
+        PLAYER_MAX_BULLETS_ON_SCREEN = configurable_options.PLAYER_MAX_BULLETS_ON_SCREEN
 
         if keys[pygame.K_a] or keys[pygame.K_LEFT]:
             self.rotate(-dt)
