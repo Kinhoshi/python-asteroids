@@ -115,7 +115,7 @@ def options_menu():
     menu_background = MenuBackground()
     asteroids_theme.background_color = (0, 0, 0, 0)
     menu = pygame_menu.Menu('Options', SCREEN_WIDTH, SCREEN_HEIGHT, theme=asteroids_theme)
-    menu.add.button('Fullscreen', lambda: pygame.display.toggle_fullscreen())
+    menu.add.button('Toggle Fullscreen', lambda: pygame.display.toggle_fullscreen())
     menu.add.button('Objects', objects_sub_menu)
     menu.add.button('Back', main_menu)
     menu.mainloop(screen, bgfun=menu_background.draw)
@@ -131,6 +131,7 @@ def objects_sub_menu():
     menu.add.selector('Player Max Bullets', [('Default', 5), ('Double', 10), ('Triple', 15)], onchange=lambda item, value: set_attribute(GameOptions, 'PLAYER_MAX_BULLETS_ON_SCREEN', value))
     menu.add.selector('Max Asteroids', [('Default', 15), ('Double', 30), ('Triple', 45)], onchange=lambda item, value: set_attribute(GameOptions, 'MAX_ASTEROIDS_ON_SCREEN', value))
     menu.add.selector('Asteroid Sizes', [('Default', 3), ('4', 4), ('5', 5)], onchange=lambda item, value: set_attribute(GameOptions, 'ASTEROID_KINDS', value))
+    menu.add.selector('Star Twinkle Effect', [('On', True), ('Off', False)], onreturn=lambda item, value: set_attribute(Star, 'twinkle', value))
     menu.add.button('Back', options_menu)
     menu.mainloop(screen, bgfun=menu_background.draw)
 

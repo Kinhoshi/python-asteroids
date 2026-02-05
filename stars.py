@@ -7,12 +7,17 @@ class Star(CircleShape):
     def __init__(self, x, y, radius):
         super().__init__(x, y, radius)
         self.radius = radius
-        self.color = ["blue", "yellow", "red", "purple", "green", "white"]
+        self.twinkle = getattr(self, "twinkle", True)
+        if self.twinkle:
+            self.color = ["blue", "yellow", "red", "purple", "green", "white"]
+        else: self.color = random.choice(["blue", "yellow", "red", "purple", "green", "white"])
 
     def draw(self, screen):
         center = self.position
         radius = self.radius
-        pygame.draw.circle(screen, random.choice(self.color), center, radius, 0)
+        if self.twinkle:
+            pygame.draw.circle(screen, random.choice(self.color), center, radius, 0)
+        else: pygame.draw.circle(screen, self.color, center, radius, 0)
 
     def update(self, dt):
         pass
