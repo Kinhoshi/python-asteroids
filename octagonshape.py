@@ -3,6 +3,7 @@ import pygame
 import math
 import random
 
+# class for asteroids
 class OctagonShape(pygame.sprite.Sprite):
     def __init__(self, x, y, radius):
         if hasattr(self, "containers"):

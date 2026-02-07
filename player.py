@@ -6,7 +6,7 @@ import pygame
 
 class Player(CircleShape):
     def __init__(self, x, y):
-        super().__init__(x, y, PLAYER_RADIUS)
+        super().__init__(x, y)
         self.rotation = 0
         self.cooldown_timer = 0
         self.bullet_count = 0
@@ -14,13 +14,6 @@ class Player(CircleShape):
         self.width = getattr(self, "width", LINE_WIDTH)
 
 
-    def triangle(self):
-        forward = pygame.Vector2(0, 1).rotate(self.rotation)
-        right = pygame.Vector2(0, 1).rotate(self.rotation + 90) * self.radius / 1.5
-        a = self.position + forward * self.radius
-        b = self.position - forward * self.radius - right
-        c = self.position - forward * self.radius + right
-        return [a, b, c]
     
     def draw(self, screen):
         points = self.triangle()
@@ -93,3 +86,5 @@ class Player(CircleShape):
        if (cross1 > 0 and cross2 > 0 and cross3 > 0) or (cross1 < 0 and cross2 < 0 and cross3 < 0):
            return True
        return False
+
+    def get_world_vertices(self):
