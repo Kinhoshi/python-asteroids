@@ -5,7 +5,7 @@ from asteroidfield import AsteroidField
 from stars import Star, StarField
 
 class MenuBackground:
-    def __init__(self):
+    def __init__(self, game_options):
         self.screen = pygame.display.get_surface()
         self.updatable = pygame.sprite.Group()
         self.drawable = pygame.sprite.Group()
@@ -16,8 +16,8 @@ class MenuBackground:
         Star.containers = (self.stars, self.drawable)
         AsteroidField.containers = (self.updatable)
         
-        self.asteroid_field = AsteroidField()
-        StarField(400)
+        self.asteroid_field = AsteroidField(game_options)
+        StarField(400, game_options)
         
         self.clock = pygame.time.Clock()
         self.dt = 0

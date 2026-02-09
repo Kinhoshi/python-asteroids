@@ -4,10 +4,10 @@ from constants import *
 from circleshape import *
 
 class Star(CircleShape):
-    def __init__(self, x, y, radius):
+    def __init__(self, x, y, radius, game_options):
         super().__init__(x, y, radius)
         self.radius = radius
-        self.twinkle = getattr(self, "twinkle", True)
+        self.twinkle = game_options.STAR_TWINKLE_EFFECT
         if self.twinkle:
             self.color = ["blue", "yellow", "red", "purple", "green", "white"]
         else: self.color = random.choice(["blue", "yellow", "red", "purple", "green", "white"])
@@ -23,7 +23,7 @@ class Star(CircleShape):
         pass
 
 class StarField:
-    def __init__(self, num_stars):
+    def __init__(self, num_stars, game_options):
         SCREEN_WIDTH = pygame.display.get_surface().get_width()
         SCREEN_HEIGHT = pygame.display.get_surface().get_height()
         for _ in range(num_stars):
@@ -34,5 +34,5 @@ class StarField:
                 position = pygame.Vector2(x, y)
                 
                 if not any(star.position.distance_to(position) < (star.radius + radius) * 2 for star in Star.containers[0]):
-                    Star(x, y, radius)
+                    Star(x, y, radius, game_options)
                     break

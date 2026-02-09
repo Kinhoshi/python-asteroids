@@ -1,23 +1,24 @@
-from circleshape import *
+from triangleshape import *
 from constants import *
 from config import GameOptions
 from shot import *
 import pygame
 
-class Player(CircleShape):
-    def __init__(self, x, y):
+class Player(TriangleShape):
+    def __init__(self, x, y, game_options):
         super().__init__(x, y)
         self.rotation = 0
         self.cooldown_timer = 0
         self.bullet_count = 0
         self.time_alive = 0
-        self.width = getattr(self, "width", LINE_WIDTH)
+        self.game_options = game_options
+        self.width = game_options.PLAYER_PIXEL_WIDTH
 
 
     
     def draw(self, screen):
-        points = self.triangle()
-        pygame.draw.polygon(screen, "white", points, self.width)
+        super().draw(screen)
+        pygame.draw.polygon(screen, "white", self.points, self.width)
 
     def move(self, dt):
         unit_vector = pygame.Vector2(0, 1)
@@ -32,8 +33,7 @@ class Player(CircleShape):
         super().update(dt)
         self.cooldown_timer -= dt
         keys = pygame.key.get_pressed()
-        configurable_options = GameOptions()
-        PLAYER_MAX_BULLETS_ON_SCREEN = configurable_options.PLAYER_MAX_BULLETS_ON_SCREEN
+        PLAYER_MAX_BULLETS_ON_SCREEN = self.game_options.PLAYER_MAX_BULLETS_ON_SCREEN
 
         if keys[pygame.K_a] or keys[pygame.K_LEFT]:
             self.rotate(-dt)
@@ -56,35 +56,12 @@ class Player(CircleShape):
                 self.bullet_count += 1
 
     def shoot(self):
-        bullet = Shot(self.position.x, self.position.y, SHOT_RADIUS)
+        forward_direction = pygame.Vector2(0, 1).rotate(self.rotation)
+        offset_distance = SHOT_RADIUS * 1.5
+        offset_vector = forward_direction * offset_distance
+        bullet_pos_x = self.points[0].x + offset_vector.x
+        bullet_pos_y = self.points[0].y + offset_vector.y
+
+        bullet = Shot(bullet_pos_x, bullet_pos_y, SHOT_RADIUS, self.game_options)
         bullet.velocity = pygame.Vector2(0, 1).rotate(self.rotation)
         bullet.velocity *= PLAYER_SHOOT_SPEED
-
-    def collides_with(self, other):
-        triangle_points = self.triangle()
-        asteroid_pos = other.position
-        inside = self.point_in_triangle(asteroid_pos, triangle_points[0], triangle_points[1], triangle_points[2])
-        if inside:
-            return True
-        return False
-        
-
-    def point_in_triangle(self, p, a, b, c):
-       ab = b - a
-       ap = p - a
-
-       bc = c - b
-       bp = p - b
-
-       ca = a - c
-       cp = p - c
-
-       cross1 = ab.cross(ap)
-       cross2 = bc.cross(bp)
-       cross3 = ca.cross(cp)
-
-       if (cross1 > 0 and cross2 > 0 and cross3 > 0) or (cross1 < 0 and cross2 < 0 and cross3 < 0):
-           return True
-       return False
-
-    def get_world_vertices(self):

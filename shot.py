@@ -2,9 +2,10 @@ from constants import *
 from circleshape import *
 
 class Shot(CircleShape):
-    def __init__(self, x, y, radius):
+    def __init__(self, x, y, radius, game_options):
         super().__init__(x, y, radius)
-        self.width = getattr(self, "width", LINE_WIDTH)
+        self.width = game_options.BULLET_PIXEL_WIDTH
+        self.friendly_fire = game_options.BULLETS_COLLIDE_WITH_PLAYER
         self.time_alive = 0 # useful for higher resolutions
 
 

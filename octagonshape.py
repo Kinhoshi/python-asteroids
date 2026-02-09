@@ -16,13 +16,10 @@ class OctagonShape(pygame.sprite.Sprite):
         self.radius = radius
         self.local_vertices = self.octagon()
         self.rotation = 0
-        self.color = "white"
-        self.width = getattr(self, "width", LINE_WIDTH) # Pixel width, 0 is filled
 
     def draw(self, screen):
-        color = self.color
         points = self.get_world_vertices()
-        pygame.draw.polygon(screen, color, points, self.width)
+        pass # must override
 
     def update(self, dt):
         SCREEN_WIDTH = pygame.display.get_surface().get_width()
