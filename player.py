@@ -2,6 +2,7 @@ from triangleshape import *
 from constants import *
 from config import GameOptions
 from shot import *
+from asteroid import Asteroid
 import pygame
 
 class Player(TriangleShape):
@@ -13,6 +14,7 @@ class Player(TriangleShape):
         self.time_alive = 0
         self.game_options = game_options
         self.width = game_options.PLAYER_PIXEL_WIDTH
+        self.lives = game_options.PLAYER_LIVES
 
 
     
@@ -65,3 +67,16 @@ class Player(TriangleShape):
         bullet = Shot(bullet_pos_x, bullet_pos_y, SHOT_RADIUS, self.game_options)
         bullet.velocity = pygame.Vector2(0, 1).rotate(self.rotation)
         bullet.velocity *= PLAYER_SHOOT_SPEED
+
+    def respawn(self):
+        respawn_x = self.game_options.SCREEN_WIDTH / 2
+        respawn_y = self.game_options.SCREEN_HEIGHT / 2
+        self.position = pygame.Vector2(respawn_x, respawn_y)
+        self.rotation = 0
+        self.velocity = pygame.Vector2(0, 0)
+        self.cooldown_timer = 0
+        self.bullet_count = 0
+
+        for asteroid in Asteroid.containers[0]:
+            if asteroid.position.distance_to((respawn_x, respawn_y)) < (asteroid.radius + self.radius) * 2:
+                asteroid.kill()

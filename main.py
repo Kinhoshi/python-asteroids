@@ -56,7 +56,7 @@ def game_loop():
     Star.containers = (stars, drawable)
     StarField(400, configurable_options)
 
-    ship = Player(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, configurable_options)
+    ship = Player(configurable_options.SCREEN_WIDTH / 2, configurable_options.SCREEN_HEIGHT / 2, configurable_options)
 
     while True:
         for event in pygame.event.get():
@@ -69,15 +69,22 @@ def game_loop():
             updatable.update(dt)
             ship.time_alive += dt
             for bullet in shots:
+                if bullet.friendly_fire and bullet.collides_with(ship):
+                    log_event("player_hit")
+                    bullet.kill()
+                    ship.kill()
+                    ship.lives -= 1
+                    if ship.lives > 0:
+                        ship.respawn()
+                        updatable.add(ship)
+                        drawable.add(ship)
+                    else:
+                        print(f"Game over! You survived for {math.floor(ship.time_alive)} seconds!")
+                        print("Consider turning friendly fire off")
+                        run_main_menu(screen, configurable_options, asteroids_theme, game_loop)
                 bullet.time_alive += dt
                 if bullet.time_alive >= 8:
                     bullet.kill()
-                if bullet.friendly_fire and bullet.collides_with(ship):
-                    log_event("player_hit")
-                    ship.kill()
-                    print(f"Game over! You survived for {math.floor(ship.time_alive)} seconds!")
-                    print("Consider turning friendly fire off")
-                    sys.exit()
             ship.bullet_count = len(shots)
             for current_asteroid in asteroids:
                 asteroid_field.asteroid_count = len(asteroids)
@@ -95,8 +102,14 @@ def game_loop():
                 if ship.collides_with(current_asteroid):
                     log_event("player_hit")
                     ship.kill()
-                    print(f"Game over! You survived for {math.floor(ship.time_alive)} seconds!")
-                    sys.exit()
+                    ship.lives -= 1
+                    if ship.lives > 0:
+                        ship.respawn()
+                        updatable.add(ship)
+                        drawable.add(ship)
+                    else:
+                        print(f"Game over! You survived for {math.floor(ship.time_alive)} seconds!")
+                        run_main_menu(screen, configurable_options, asteroids_theme, game_loop)
                 for bullet in shots:
                     if bullet.collides_with(current_asteroid):
                         log_event("asteroid_shot")

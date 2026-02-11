@@ -43,6 +43,9 @@ class Asteroid(OctagonShape):
         second_asteroid = Asteroid(self.position.x, self.position.y, new_radius, self.game_options)
         first_asteroid.velocity = first_angle * 1.2
         second_asteroid.velocity = second_angle * 1.2
+        if self.color == "gold4":
+            first_asteroid.color = "gold4"
+            second_asteroid.color = "gold4"
 
     def resolve_asteroid_collision(self, other):
         delta = other.position - self.position
