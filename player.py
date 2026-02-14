@@ -3,11 +3,13 @@ from constants import *
 from config import GameOptions
 from shot import *
 from asteroid import Asteroid
+from thrust_particles import Particle
 import pygame
 
 class Player(TriangleShape):
     def __init__(self, x, y, game_options):
         super().__init__(x, y)
+        self.velocity = pygame.Vector2(0, 0)
         self.rotation = 0
         self.cooldown_timer = 0
         self.bullet_count = 0
@@ -15,6 +17,7 @@ class Player(TriangleShape):
         self.game_options = game_options
         self.width = game_options.PLAYER_PIXEL_WIDTH
         self.lives = game_options.PLAYER_LIVES
+        self.angular_velocity = 0
 
 
     
@@ -22,32 +25,28 @@ class Player(TriangleShape):
         super().draw(screen)
         pygame.draw.polygon(screen, "white", self.points, self.width)
 
-    def move(self, dt):
-        unit_vector = pygame.Vector2(0, 1)
-        rotated_vector = unit_vector.rotate(self.rotation)
-        rotated_with_speed_vector = rotated_vector * PLAYER_SPEED * dt
-        self.position += rotated_with_speed_vector
-    
-    def rotate(self, dt):
-        self.rotation += (PLAYER_TURN_SPEED * dt)
-
     def update(self, dt):
         super().update(dt)
         self.cooldown_timer -= dt
+        self.velocity *= 0.99
+        self.angular_velocity *= 0.9
+        self.position += self.velocity
+        self.rotation += self.angular_velocity * dt
         keys = pygame.key.get_pressed()
         PLAYER_MAX_BULLETS_ON_SCREEN = self.game_options.PLAYER_MAX_BULLETS_ON_SCREEN
 
         if keys[pygame.K_a] or keys[pygame.K_LEFT]:
-            self.rotate(-dt)
+            self.angular_velocity -= PLAYER_TURN_ACCELERATION
+
 
         if keys[pygame.K_d] or keys[pygame.K_RIGHT]:
-            self.rotate(dt)
+            self.angular_velocity += PLAYER_TURN_ACCELERATION
 
         if keys[pygame.K_w] or keys[pygame.K_UP]:
-            self.move(dt)
-        
-        if keys[pygame.K_s] or keys[pygame.K_DOWN]:
-            self.move(-dt)
+            self.velocity += pygame.Vector2(0, 1).rotate(self.rotation) * PLAYER_ACCELERATION_MAGNITUDE
+            mid_point_x = (self.points[1].x + self.points[2].x) / 2
+            mid_point_y = (self.points[1].y + self.points[2].y) / 2
+            particle = Particle(mid_point_x, mid_point_y, PARTICLE_RADIUS)
 
         if self.cooldown_timer > 0 or self.bullet_count == PLAYER_MAX_BULLETS_ON_SCREEN:
             pass
@@ -56,6 +55,12 @@ class Player(TriangleShape):
                 self.shoot()
                 self.cooldown_timer = PLAYER_SHOOT_COOLDOWN_SECONDS
                 self.bullet_count += 1
+
+        if self.velocity.length() >= PLAYER_MAX_SPEED:
+            self.velocity = self.velocity.normalize() * PLAYER_MAX_SPEED
+
+        if self.angular_velocity >= PLAYER_MAX_TURN_SPEED:
+            self.angular_velocity = PLAYER_MAX_TURN_SPEED
 
     def shoot(self):
         forward_direction = pygame.Vector2(0, 1).rotate(self.rotation)

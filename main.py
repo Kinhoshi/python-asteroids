@@ -3,18 +3,18 @@ import pygame_menu
 import sys
 import math
 import time
-from constants import *
 from config import GameOptions
-from logger import log_state
-from logger import log_event
+from logger import log_state, log_event
 from player import Player
 from asteroid import Asteroid
 from asteroidfield import AsteroidField
 from shot import Shot
 from stars import Star, StarField
 from menubg import MenuBackground
-from menu import *
+from menu import run_main_menu, pause_menu
 from octagonshape import OctagonShape
+from thrust_particles import Particle
+
 
 
 configurable_options = GameOptions()
@@ -46,9 +46,11 @@ def game_loop():
     asteroids = pygame.sprite.Group()
     shots = pygame.sprite.Group()
     stars = pygame.sprite.Group()
+    particles = pygame.sprite.Group()
 
 
     Player.containers = (updatable, drawable)
+    Particle.containers = (particles, updatable, drawable)
     Shot.containers = (shots, updatable, drawable)
     Asteroid.containers = (asteroids, updatable, drawable)
     AsteroidField.containers = (updatable)
@@ -68,6 +70,10 @@ def game_loop():
             log_state()
             updatable.update(dt)
             ship.time_alive += dt
+            for particle in particles:
+                particle.time_alive += dt
+                if particle.time_alive >= 0.1:
+                    particle.kill()
             for bullet in shots:
                 if bullet.friendly_fire and bullet.collides_with(ship):
                     log_event("player_hit")
@@ -99,7 +105,7 @@ def game_loop():
                                 current_asteroid.split()
                             else:
                                 secondary_asteroid.split()
-                if ship.collides_with(current_asteroid):
+                """if ship.collides_with(current_asteroid):
                     log_event("player_hit")
                     ship.kill()
                     ship.lives -= 1
@@ -109,7 +115,7 @@ def game_loop():
                         drawable.add(ship)
                     else:
                         print(f"Game over! You survived for {math.floor(ship.time_alive)} seconds!")
-                        run_main_menu(screen, configurable_options, asteroids_theme, game_loop)
+                        run_main_menu(screen, configurable_options, asteroids_theme, game_loop)"""
                 for bullet in shots:
                     if bullet.collides_with(current_asteroid):
                         log_event("asteroid_shot")
