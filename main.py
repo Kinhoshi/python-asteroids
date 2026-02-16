@@ -105,7 +105,7 @@ def game_loop():
                                 current_asteroid.split()
                             else:
                                 secondary_asteroid.split()
-                """if ship.collides_with(current_asteroid):
+                if ship.collides_with(current_asteroid):
                     log_event("player_hit")
                     ship.kill()
                     ship.lives -= 1
@@ -115,7 +115,7 @@ def game_loop():
                         drawable.add(ship)
                     else:
                         print(f"Game over! You survived for {math.floor(ship.time_alive)} seconds!")
-                        run_main_menu(screen, configurable_options, asteroids_theme, game_loop)"""
+                        run_main_menu(screen, configurable_options, asteroids_theme, game_loop)
                 for bullet in shots:
                     if bullet.collides_with(current_asteroid):
                         log_event("asteroid_shot")
