@@ -11,6 +11,7 @@ class MenuBackground:
         self.drawable = pygame.sprite.Group()
         self.asteroids = pygame.sprite.Group()
         self.stars = pygame.sprite.Group()
+        self.game_surface = pygame.Surface((BASE_WIDTH, BASE_HEIGHT))
 
         Asteroid.containers = (self.asteroids, self.updatable, self.drawable)
         Star.containers = (self.stars, self.drawable)
@@ -48,6 +49,9 @@ class MenuBackground:
                     else:
                         secondary_asteroid.split()
         self.screen.fill("black")
+        self.game_surface.fill("black")
         for sprites in self.drawable:
-            sprites.draw(self.screen)
+            sprites.draw(self.game_surface)
+        scaled_surface = pygame.transform.scale(self.game_surface, self.screen.get_size())
+        self.screen.blit(scaled_surface, (0, 0))
         self.dt = self.clock.tick(0) / 1000

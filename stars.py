@@ -24,8 +24,8 @@ class Star(CircleShape):
 
 class StarField:
     def __init__(self, num_stars, game_options):
-        SCREEN_WIDTH = pygame.display.get_surface().get_width()
-        SCREEN_HEIGHT = pygame.display.get_surface().get_height()
+        SCREEN_WIDTH = BASE_WIDTH
+        SCREEN_HEIGHT = BASE_HEIGHT
         for _ in range(num_stars):
             for _ in range(10):
                 x = random.randint(0, SCREEN_WIDTH)

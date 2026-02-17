@@ -12,8 +12,8 @@ class AsteroidField(pygame.sprite.Sprite):
         self.asteroid_count = 0
         self.game_options = game_options
         
-        SCREEN_WIDTH = pygame.display.get_surface().get_width()
-        SCREEN_HEIGHT = pygame.display.get_surface().get_height()
+        SCREEN_WIDTH = BASE_WIDTH
+        SCREEN_HEIGHT = BASE_HEIGHT
         
         max_radius = ASTEROID_MIN_RADIUS * self.game_options.ASTEROID_KINDS
         

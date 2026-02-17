@@ -14,6 +14,7 @@ from menubg import MenuBackground
 from menu import run_main_menu, pause_menu
 from octagonshape import OctagonShape
 from thrust_particles import Particle
+from constants import BASE_WIDTH, BASE_HEIGHT
 
 
 
@@ -22,13 +23,14 @@ SCREEN_WIDTH = configurable_options.SCREEN_WIDTH
 SCREEN_HEIGHT = configurable_options.SCREEN_HEIGHT
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 asteroids_theme = pygame_menu.themes.THEME_DARK.copy()
+game_surface = pygame.Surface((BASE_WIDTH, BASE_HEIGHT))
 
 
 def main():
     print(f"Starting Asteroids with pygame version: {pygame.version.ver}\nScreen width: {SCREEN_WIDTH}\nScreen height: {SCREEN_HEIGHT}")
     pygame.init()
     pygame.display.set_caption("py-Asteroids")
-    run_main_menu(screen, configurable_options, asteroids_theme, game_loop)
+    run_main_menu(screen, game_surface, configurable_options, asteroids_theme, game_loop)
     
    
 
@@ -58,7 +60,7 @@ def game_loop():
     Star.containers = (stars, drawable)
     StarField(400, configurable_options)
 
-    ship = Player(configurable_options.SCREEN_WIDTH / 2, configurable_options.SCREEN_HEIGHT / 2, configurable_options)
+    ship = Player(BASE_WIDTH / 2, BASE_HEIGHT / 2, configurable_options)
 
     while True:
         for event in pygame.event.get():
@@ -87,7 +89,7 @@ def game_loop():
                     else:
                         print(f"Game over! You survived for {math.floor(ship.time_alive)} seconds!")
                         print("Consider turning friendly fire off")
-                        run_main_menu(screen, configurable_options, asteroids_theme, game_loop)
+                        run_main_menu(screen, game_surface, configurable_options, asteroids_theme, game_loop)
                 bullet.time_alive += dt
                 if bullet.time_alive >= 8:
                     bullet.kill()
@@ -115,22 +117,25 @@ def game_loop():
                         drawable.add(ship)
                     else:
                         print(f"Game over! You survived for {math.floor(ship.time_alive)} seconds!")
-                        run_main_menu(screen, configurable_options, asteroids_theme, game_loop)
+                        run_main_menu(screen, game_surface, configurable_options, asteroids_theme, game_loop)
                 for bullet in shots:
                     if bullet.collides_with(current_asteroid):
                         log_event("asteroid_shot")
                         current_asteroid.split()
                         bullet.kill()
         if paused:
-            if pause_menu(screen, configurable_options, asteroids_theme, game_loop):
+            if pause_menu(screen, game_surface, configurable_options, asteroids_theme, game_loop):
                 return
             Asteroid.containers = (asteroids, updatable, drawable)
             paused = not paused
             fps.tick(60)
 
         screen.fill("black")
+        game_surface.fill("black")
         for sprites in drawable:
-            sprites.draw(screen)
+            sprites.draw(game_surface)
+        scaled_surface = pygame.transform.scale(game_surface, screen.get_size())
+        screen.blit(scaled_surface, (0,0))
         pygame.display.flip()
         dt = fps.tick(60) / 1000
 

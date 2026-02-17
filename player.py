@@ -74,8 +74,8 @@ class Player(TriangleShape):
         bullet.velocity *= PLAYER_SHOOT_SPEED
 
     def respawn(self):
-        respawn_x = self.game_options.SCREEN_WIDTH / 2
-        respawn_y = self.game_options.SCREEN_HEIGHT / 2
+        respawn_x = BASE_WIDTH / 2
+        respawn_y = BASE_HEIGHT / 2
         self.position = pygame.Vector2(respawn_x, respawn_y)
         self.rotation = 0
         self.velocity = pygame.Vector2(0, 0)

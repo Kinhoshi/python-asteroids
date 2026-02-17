@@ -27,8 +27,8 @@ class TriangleShape(pygame.sprite.Sprite):
         pass # must override
 
     def update(self, dt):
-        SCREEN_WIDTH = pygame.display.get_surface().get_width()
-        SCREEN_HEIGHT = pygame.display.get_surface().get_height()
+        SCREEN_WIDTH = BASE_WIDTH
+        SCREEN_HEIGHT = BASE_HEIGHT
         if self.position.x > SCREEN_WIDTH:
             self.position.x -= SCREEN_WIDTH
         if self.position.x < 0:
