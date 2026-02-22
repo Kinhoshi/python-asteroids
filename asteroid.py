@@ -14,7 +14,8 @@ class Asteroid(OctagonShape):
         self.game_options = game_options
         self.width = self.game_options.ASTEROID_PIXEL_WIDTH
         self.time_alive = 0 # used for background asteroids
-        value = random.randint(0, 10)
+        self.child = False # used for score multiplier
+        value = random.randint(1, 20)
         if value == 10:
             self.color = "gold4"
         self.local_vertices = self.octagon()
@@ -23,6 +24,8 @@ class Asteroid(OctagonShape):
         super().update(dt)
         self.position += (self.velocity * dt)
         self.rotation += self.rotation_speed * dt
+        if self.velocity.length() >= ASTEROID_MAX_SPEED:
+            self.velocity = self.velocity.normalize() * ASTEROID_MAX_SPEED
 
     def draw(self, screen):
         color = self.color
@@ -43,6 +46,8 @@ class Asteroid(OctagonShape):
         second_asteroid = Asteroid(self.position.x, self.position.y, new_radius, self.game_options)
         first_asteroid.velocity = first_angle * 1.2
         second_asteroid.velocity = second_angle * 1.2
+        first_asteroid.child = True
+        second_asteroid.child = True
         if self.color == "gold4":
             first_asteroid.color = "gold4"
             second_asteroid.color = "gold4"
@@ -57,6 +62,21 @@ class Asteroid(OctagonShape):
         penetration = min_distance - current_distance
         if penetration <= 0:
             return
-        self.position -= normal * (penetration / 2)
-        other.position += normal * (penetration / 2)
-        self.velocity, other.velocity = other.velocity, self.velocity
+            
+        m1 = self.radius ** 3
+        m2 = other.radius ** 3
+        total_mass = m1 + m2
+
+        self.position -= normal * (penetration * (m2 / total_mass))
+        other.position += normal * (penetration * (m1 / total_mass))
+
+        v1 = self.velocity
+        v2 = other.velocity
+        dot_prod = (v1 - v2).dot(delta)
+
+        if dot_prod > 0:
+            dist_sq = current_distance ** 2
+            collision_scale = dot_prod / dist_sq
+            restitution = 0.6
+            self.velocity -= (1 + restitution) * (m2 / total_mass) * collision_scale * delta
+            other.velocity += (1 + restitution) * (m1 / total_mass) * collision_scale * delta
