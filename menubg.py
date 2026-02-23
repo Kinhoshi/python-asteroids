@@ -26,6 +26,7 @@ class MenuBackground:
         Asteroid.containers = (self.asteroids, self.updatable, self.drawable)
         Star.containers = (self.stars, self.drawable)
         AsteroidField.containers = (self.updatable)
+        self.dt = self.clock.tick(0) / 1000
 
         self.updatable.update(self.dt)
         for current_asteroid in self.asteroids:
@@ -45,4 +46,3 @@ class MenuBackground:
             sprites.draw(self.game_surface)
         scaled_surface = pygame.transform.scale(self.game_surface, screen.get_size())
         screen.blit(scaled_surface, (0, 0))
-        self.dt = self.clock.tick(0) / 1000

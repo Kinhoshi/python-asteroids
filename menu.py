@@ -4,6 +4,8 @@ import sys
 import weakref
 from config import GameOptions
 from menubg import MenuBackground
+from pygame_menu_custom_controller import MyCustomController
+
 
 screen = None
 configurable_options = None
@@ -25,7 +27,8 @@ def run_main_menu(screen_obj, game_surface, game_options_obj, theme_obj, game_lo
     asteroids_theme = theme_obj
     SCREEN_WIDTH = configurable_options.SCREEN_WIDTH
     SCREEN_HEIGHT = configurable_options.SCREEN_HEIGHT
-
+    custom_controller = MyCustomController()
+    
     def set_attribute_internal(target, attr, value): # function to change GameOptions class items
         setattr(target, attr, value)
 
@@ -104,18 +107,28 @@ def run_main_menu(screen_obj, game_surface, game_options_obj, theme_obj, game_lo
     asteroids_theme.background_color = (0, 0, 0, 0)
         
     menu = pygame_menu.Menu('py-Asteroids', SCREEN_WIDTH, SCREEN_HEIGHT, theme=asteroids_theme)
+    menu.set_controller(custom_controller)
     menus.add(menu)
     menu.add.button('Play', game_loop_func)
     menu.add.button('Options', options_menu_internal())
     menu.add.button('Quit', pygame_menu.events.EXIT)
-    menu.mainloop(screen, bgfun=lambda: menu_background.draw(screen))
+    while menu.is_enabled():
+        all_events = pygame.event.get()
+        for event in all_events:
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+        menu.mainloop(screen, bgfun=lambda: menu_background.draw(screen), disable_event=True, events=all_events)
+
 
 # Pause menu
 def pause_menu(screen_obj, game_surface, game_options_obj, theme_obj, game_loop_func):
+    custom_controller = MyCustomController()
     menu_background = MenuBackground(game_options_obj)
     theme_obj.background_color = (0, 0, 0, 0)
     
     paused_menu = pygame_menu.Menu('Paused', game_options_obj.SCREEN_WIDTH, game_options_obj.SCREEN_HEIGHT, theme=theme_obj)
+    paused_menu.set_controller(custom_controller)
     menus.add(paused_menu)
     
     action = {'quit_to_main': False}
@@ -128,8 +141,13 @@ def pause_menu(screen_obj, game_surface, game_options_obj, theme_obj, game_loop_
     paused_menu.add.button('Video Options', video_options())
     paused_menu.add.button('Quit to Main Menu', quit_to_main)
     paused_menu.add.button('Quit to Desktop', lambda: (pygame.quit(), sys.exit()))
-    
-    paused_menu.mainloop(screen_obj, bgfun=lambda:menu_background.draw(screen_obj))
+    while paused_menu.is_enabled():
+        all_events = pygame.event.get()
+        for event in all_events:
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+        paused_menu.mainloop(screen_obj, bgfun=lambda:menu_background.draw(screen_obj))
     return action['quit_to_main']
 # Video menu, accessible via main menu and pause menu
 def video_options():
@@ -182,7 +200,7 @@ def toggle_fullscreen_and_adjust_screen(): # function to toggle fullscreen and s
     global screen
 
     pygame.display.toggle_fullscreen()
-    
+
     is_fullscreen = pygame.display.get_surface().get_flags() & pygame.FULLSCREEN
     if is_fullscreen:
         info = pygame.display.Info()
@@ -211,7 +229,10 @@ def set_resolution(resolution): # function to set SCREEN WIDTH & HEIGHT to the r
     SCREEN_HEIGHT = resolution[1]
     
     if pygame.display.get_surface().get_flags() & pygame.FULLSCREEN:
-        screen = pygame.display.set_mode(resolution, pygame.FULLSCREEN)
+        for m in menus:
+            m._surface = pygame.display.set_mode(resolution)
+        pygame.display.set_mode(resolution)
+        pygame.display.set_mode(resolution, pygame.FULLSCREEN)
     else:
         screen = pygame.display.set_mode(resolution)
 
