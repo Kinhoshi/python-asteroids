@@ -91,15 +91,15 @@ def run_main_menu(screen_obj, game_surface, game_options_obj, theme_obj, game_lo
 
         difficulty_menu = pygame_menu.Menu('Difficulty Settings', SCREEN_WIDTH, SCREEN_HEIGHT, theme=asteroids_theme)
         menus.add(difficulty_menu)
-        difficulty_menu.add.label('Max bullets on screen at one time; default is 5', font_size=15, font_color='white')
-        difficulty_menu.add.selector('Player Max Bullets', [('Default', 5), ('Double', 10), ('Triple', 15)], default=max_bullets_index, onchange=lambda item, value: set_attribute_internal(configurable_options, 'PLAYER_MAX_BULLETS_ON_SCREEN', value))
-        difficulty_menu.add.selector('Player Lives', [('1', 1), ('2', 2), ('3', 3)], default=player_lives_index, onchange=lambda item, value: set_attribute_internal(configurable_options, 'PLAYER_LIVES', value))
+        #difficulty_menu.add.label('Max bullets on screen at one time; default is 5', font_size=15, font_color='white')
+        #difficulty_menu.add.selector('Player Max Bullets', [('Default', 5), ('Double', 10), ('Triple', 15)], default=max_bullets_index, onchange=lambda item, value: set_attribute_internal(configurable_options, 'PLAYER_MAX_BULLETS_ON_SCREEN', value))
+        #difficulty_menu.add.selector('Player Lives', [('1', 1), ('2', 2), ('3', 3)], default=player_lives_index, onchange=lambda item, value: set_attribute_internal(configurable_options, 'PLAYER_LIVES', value))
         difficulty_menu.add.label('Allows your own bullets to collide with you; essentially friendly fire.', font_size=15, font_color='white')
         difficulty_menu.add.selector('Bullets Collide w/Player', [('Off', False), ('On', True)], default=0 if bullets_collide_with_player == False else 1, onchange=lambda item, value: set_attribute_internal(configurable_options, 'BULLETS_COLLIDE_WITH_PLAYER', value))
-        difficulty_menu.add.label('Prevents asteroids from spawning endlessly; default is 15', font_size=15, font_color='white')
-        difficulty_menu.add.selector('Max Asteroids', [('Default', 15), ('Double', 30), ('Triple', 45)], default=max_asteroids_index, onchange=lambda item, value: set_attribute_internal(configurable_options, 'MAX_ASTEROIDS_ON_SCREEN', value))
-        difficulty_menu.add.label('Allows bigger asteroids to spawn; default is 3 different sizes', font_size=15, font_color='white')
-        difficulty_menu.add.selector('Asteroid Sizes', [('Default', 3), ('4', 4), ('5', 5)], default=asteroid_kinds_index, onchange=lambda item, value: set_attribute_internal(configurable_options, 'ASTEROID_KINDS', value))
+        #difficulty_menu.add.label('Prevents asteroids from spawning endlessly; default is 15', font_size=15, font_color='white')
+        #difficulty_menu.add.selector('Max Asteroids', [('Default', 15), ('Double', 30), ('Triple', 45)], default=max_asteroids_index, onchange=lambda item, value: set_attribute_internal(configurable_options, 'MAX_ASTEROIDS_ON_SCREEN', value))
+        #difficulty_menu.add.label('Allows bigger asteroids to spawn; default is 3 different sizes', font_size=15, font_color='white')
+        #difficulty_menu.add.selector('Asteroid Sizes', [('Default', 3), ('4', 4), ('5', 5)], default=asteroid_kinds_index, onchange=lambda item, value: set_attribute_internal(configurable_options, 'ASTEROID_KINDS', value))
         difficulty_menu.add.button('Back', pygame_menu.events.BACK)
         return difficulty_menu
 

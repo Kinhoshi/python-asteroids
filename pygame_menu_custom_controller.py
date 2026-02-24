@@ -1,6 +1,5 @@
 import pygame
 import pygame_menu.controls as controls
-import pygame_menu.widgets
 
 # 1. Create your custom controller class
 class MyCustomController(controls.Controller):

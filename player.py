@@ -63,13 +63,15 @@ class Player(TriangleShape):
             self.angular_velocity = PLAYER_MAX_TURN_SPEED
 
     def shoot(self):
+        tip = self.local_vertices[0].rotate(self.rotation) + self.position
+        
         forward_direction = pygame.Vector2(0, 1).rotate(self.rotation)
         offset_distance = SHOT_RADIUS * 1.5
         offset_vector = forward_direction * offset_distance
-        bullet_pos_x = self.points[0].x + offset_vector.x
-        bullet_pos_y = self.points[0].y + offset_vector.y
+        
+        bullet_pos = tip + offset_vector
 
-        bullet = Shot(bullet_pos_x, bullet_pos_y, SHOT_RADIUS, self.game_options)
+        bullet = Shot(bullet_pos.x, bullet_pos.y, SHOT_RADIUS, self.game_options)
         bullet.velocity = pygame.Vector2(0, 1).rotate(self.rotation)
         bullet.velocity *= PLAYER_SHOOT_SPEED
 

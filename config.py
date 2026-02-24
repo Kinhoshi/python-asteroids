@@ -14,4 +14,4 @@ class GameOptions:
         self.BULLET_PIXEL_WIDTH = getattr(self, "BULLET_PIXEL_WIDTH", 2)
         self.STAR_TWINKLE_EFFECT = getattr(self, "STAR_TWINKLE_EFFECT", True)
         self.BULLETS_COLLIDE_WITH_PLAYER = getattr(self, "BULLETS_COLLIDE_WITH_PLAYER", False)
-        self.PLAYER_LIVES = getattr(self, "PLAYER_LIVES", 1)
+        self.PLAYER_LIVES = getattr(self, "PLAYER_LIVES", 3)

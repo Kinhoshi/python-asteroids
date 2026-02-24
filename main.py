@@ -14,7 +14,9 @@ from menu import run_main_menu, pause_menu
 from octagonshape import OctagonShape
 from thrust_particles import Particle
 from constants import BASE_WIDTH, BASE_HEIGHT, ASTEROID_MIN_RADIUS
-from game_over_screen import game_over 
+from game_over_screen import game_over
+from player_lives import Lives
+
 
 
 
@@ -50,9 +52,12 @@ def game_loop():
     time_alive = 0
     danger_score_multiplier = 1
     asteroid_score_bonus = 0
-    text_surface = game_font.render(f"Score: {score}", True, (255, 255, 255))
-    text_rect = text_surface.get_rect()
-    
+    next_life_score = 50000
+    score_text = game_font.render(f"Score: {score}", True, (255, 255, 255))
+    score_rect = score_text.get_rect()
+    life_text = game_font.render(f"Lives:", True, (255, 255, 255))
+    life_rect = life_text.get_rect()
+    life_rect.center = (40, 10)
 
     fps = pygame.time.Clock()
     dt = 0
@@ -63,8 +68,10 @@ def game_loop():
     shots = pygame.sprite.Group()
     stars = pygame.sprite.Group()
     particles = pygame.sprite.Group()
+    lives = pygame.sprite.Group()
 
     Player.containers = (updatable, drawable)
+    Lives.containers = (lives, updatable, drawable)
     Particle.containers = (particles, updatable, drawable)
     Shot.containers = (shots, updatable, drawable)
     Asteroid.containers = (asteroids, updatable, drawable)
@@ -75,22 +82,47 @@ def game_loop():
 
     ship = Player(BASE_WIDTH / 2, BASE_HEIGHT / 2, configurable_options)
 
+    life_shape_pos_x = 25
+    for i in range(0, ship.lives):
+        if i == 0:
+            life_shape = Lives(life_rect.right + 15, life_rect.centery + 15)
+        if i > 0:
+            life_shape = Lives(life_rect.right + 15 + life_shape_pos_x, life_rect.centery + 15)
+            life_shape_pos_x += 25
+        updatable.add(life_shape)
+        drawable.add(life_shape)
+
+
     current_game_state = PLAYING
 
     while True:
-        text_rect.center = (pygame.display.Info().current_w // 2, 10)
+        score_rect.center = (pygame.display.Info().current_w // 2, 10)
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                current_game_state = PAUSED
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    current_game_state = PAUSED
 
+        if len(lives) > ship.lives:
+            life = lives.sprites()
+            if life:
+                life.sort(key=lambda x: x.position.x)
+                life[-1].kill()
 
         if current_game_state == PLAYING:
             log_state()
             updatable.update(dt)
             ship.time_alive += dt
             time_alive = math.floor(ship.time_alive)
+            if score >= next_life_score:
+                ship.lives += 1
+                life_shape = Lives(life_rect.right + 15 + ((ship.lives - 1) * 25), life_rect.centery + 15)
+                updatable.add(life_shape)
+                drawable.add(life_shape)
+                lives.add(life_shape)
+                next_life_score += 50000
             if ship.lives <= 0:
                 ship.time_alive = 0
                 current_game_state = GAME_OVER
@@ -153,20 +185,24 @@ def game_loop():
             for sprites in drawable:
                 sprites.draw(game_surface)
             scaled_surface = pygame.transform.scale(game_surface, screen.get_size())
+            score_text = game_font.render(f"Score: {score}", True, (255, 255, 255))
             screen.blit(scaled_surface, (0,0))
-            screen.blit(text_surface, text_rect)
-            text_surface = game_font.render(f"Score: {score}", True, (255, 255, 255))
+            screen.blit(score_text, score_rect)
+            screen.blit(life_text, life_rect)
             pygame.display.flip()
             dt = fps.tick(60) / 1000
 
         elif current_game_state == PAUSED:
+            log_event("game_paused")
             if pause_menu(screen, game_surface, configurable_options, asteroids_theme, game_loop):
                 return
             Asteroid.containers = (asteroids, updatable, drawable)
             current_game_state = PLAYING
+            log_event("game_resumed")
             fps.tick(60)
 
         elif current_game_state == GAME_OVER:
+            log_event("game_over")
             if game_over(screen, configurable_options, score, time_alive):
                 return
             current_game_state = MENU
