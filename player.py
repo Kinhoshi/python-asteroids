@@ -28,8 +28,8 @@ class Player(TriangleShape):
     def update(self, dt):
         super().update(dt)
         self.cooldown_timer -= dt
-        self.velocity *= 0.99
-        self.angular_velocity *= 0.9
+        self.velocity *= 0.997
+        self.angular_velocity *= 0.95
         self.position += self.velocity
         self.rotation += self.angular_velocity * dt
         keys = pygame.key.get_pressed()
@@ -37,16 +37,26 @@ class Player(TriangleShape):
 
         if keys[pygame.K_a] or keys[pygame.K_LEFT]:
             self.angular_velocity -= PLAYER_TURN_ACCELERATION
-
+            mid_point = (self.points[0] + self.points[1]) / 2
+            direction = (mid_point - self.position).normalize()
+            for i in range(2):
+                pos = mid_point + (direction * (i * PARTICLE_RADIUS * 1.5))
+                Particle(pos.x, pos.y, PARTICLE_RADIUS)
 
         if keys[pygame.K_d] or keys[pygame.K_RIGHT]:
             self.angular_velocity += PLAYER_TURN_ACCELERATION
+            mid_point = (self.points[0] + self.points[2]) / 2
+            direction = (mid_point - self.position).normalize()
+            for i in range(2):
+                pos = mid_point + (direction * (i * PARTICLE_RADIUS * 1.5))
+                Particle(pos.x, pos.y, PARTICLE_RADIUS)
 
         if keys[pygame.K_w] or keys[pygame.K_UP]:
             self.velocity += pygame.Vector2(0, 1).rotate(self.rotation) * PLAYER_ACCELERATION_MAGNITUDE
-            mid_point_x = (self.points[1].x + self.points[2].x) / 2
-            mid_point_y = (self.points[1].y + self.points[2].y) / 2
-            particle = Particle(mid_point_x, mid_point_y, PARTICLE_RADIUS)
+            mid_point = (self.points[1] + self.points[2]) / 2
+            direction = (mid_point - self.position).normalize()
+            pos = mid_point + (direction * (PARTICLE_RADIUS))
+            Particle(pos.x, pos.y, PARTICLE_RADIUS)
 
         if self.cooldown_timer > 0 or self.bullet_count == PLAYER_MAX_BULLETS_ON_SCREEN:
             pass
@@ -61,6 +71,8 @@ class Player(TriangleShape):
 
         if self.angular_velocity >= PLAYER_MAX_TURN_SPEED:
             self.angular_velocity = PLAYER_MAX_TURN_SPEED
+        elif self.angular_velocity <= -PLAYER_MAX_TURN_SPEED:
+            self.angular_velocity = -PLAYER_MAX_TURN_SPEED
 
     def shoot(self):
         tip = self.local_vertices[0].rotate(self.rotation) + self.position

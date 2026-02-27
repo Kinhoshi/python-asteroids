@@ -52,7 +52,7 @@ def game_loop():
     time_alive = 0
     danger_score_multiplier = 1
     asteroid_score_bonus = 0
-    next_life_score = 50000
+    next_life_score = 25000
     score_text = game_font.render(f"Score: {score}", True, (255, 255, 255))
     score_rect = score_text.get_rect()
     life_text = game_font.render(f"Lives:", True, (255, 255, 255))
@@ -122,7 +122,7 @@ def game_loop():
                 updatable.add(life_shape)
                 drawable.add(life_shape)
                 lives.add(life_shape)
-                next_life_score += 50000
+                next_life_score += 25000
             if ship.lives <= 0:
                 ship.time_alive = 0
                 current_game_state = GAME_OVER

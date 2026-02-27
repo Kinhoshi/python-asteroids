@@ -1,6 +1,7 @@
 import pygame
 import random
 from asteroid import Asteroid
+from player import Player
 from config import GameOptions
 from constants import *
 
@@ -44,6 +45,10 @@ class AsteroidField(pygame.sprite.Sprite):
         for asteroid in Asteroid.containers[0]:
             if asteroid.position.distance_to(position) < (asteroid.radius + radius) * 2:
                 return
+        if hasattr(Player, "containers"):
+            for player in Player.containers[0]:
+                if isinstance(player, Player) and player.position.distance_to(position) < (player.radius + radius) * 2:
+                    return
         asteroid = Asteroid(position.x, position.y, radius, self.game_options)
         asteroid.velocity = velocity
 
