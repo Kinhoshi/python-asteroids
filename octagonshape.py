@@ -46,14 +46,6 @@ class OctagonShape(pygame.sprite.Sprite):
             y = math.sin(math.radians(angle)) * radius
 
             points.append(pygame.Vector2(x, y))
-        
-        center = pygame.Vector2(0, 0)
-
-        for p in points:
-            center += p
-
-        center /= len(points)
-
         return points
 
     def get_world_vertices(self):

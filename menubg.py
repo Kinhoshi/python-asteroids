@@ -23,9 +23,6 @@ class MenuBackground:
         self.dt = 0
 
     def draw(self, screen):
-        Asteroid.containers = (self.asteroids, self.updatable, self.drawable)
-        Star.containers = (self.stars, self.drawable)
-        AsteroidField.containers = (self.updatable)
         self.dt = self.clock.tick(0) / 1000
 
         self.updatable.update(self.dt)

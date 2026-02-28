@@ -23,7 +23,6 @@ class TriangleShape(pygame.sprite.Sprite):
         self.radius = max(v.length() for v in self.local_vertices)
 
     def draw(self, screen):
-        self.points = self.get_world_vertices()
         pass # must override
 
     def update(self, dt):

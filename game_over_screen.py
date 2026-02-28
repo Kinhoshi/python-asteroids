@@ -20,16 +20,15 @@ def game_over(screen, game_options, score, time):
     input_active = True
     time_converted = time_converter(time)
     menu_option_index = 0
-    high_score_list = None
+    high_score_list = []
     score_dict = {}
 
     try:
         with open("high_scores.json", "r") as f:
             high_score_list = json.load(f)
-        if len(high_score_list) == 0:
-            high_score_list = []
 
     except FileNotFoundError:
+        print("Error: high_scores.json not found, creating blank file now.")
         open("high_scores.json", "w").write("[]")
 
     is_high_score = False
@@ -38,10 +37,8 @@ def game_over(screen, game_options, score, time):
                             
     elif high_score_list and final_score > int(high_score_list[-1]["score"]):
         is_high_score = True
-    
 
-    while running:
-        if is_high_score:
+    if is_high_score:
             congrats_font = pygame.font.SysFont(None, 60)
             congrats_text = congrats_font.render("Congratulations! You set a new high score!", True, white_text)
             congrats_2nd_line = congrats_font.render("Enter your name below!", True, white_text)
@@ -49,41 +46,45 @@ def game_over(screen, game_options, score, time):
             congrats_2nd_line_rect = congrats_2nd_line.get_rect()
             congrats_rect.center = (pygame.display.Info().current_w // 2, pygame.display.Info().current_h // 2 + 340)
             congrats_2nd_line_rect.center = (pygame.display.Info().current_w // 2, pygame.display.Info().current_h // 2 + 375)
+
+    game_over_font = pygame.font.SysFont(None, 100)
+    game_over_text = game_over_font.render("GAME OVER", True, white_text)
+    game_over_rect = game_over_text.get_rect()
+    game_over_rect.center = (pygame.display.Info().current_w // 2, pygame.display.Info().current_h // 2)
+    score_font = pygame.font.SysFont(None, 40)
+    score_text = score_font.render(f"Score: {score}", True, white_text)
+    time_bonus_text = score_font.render(f"Time Bonus: {time_bonus}", True, white_text)
+    score_rect = score_text.get_rect()
+    score_rect.center = (pygame.display.Info().current_w // 2, pygame.display.Info().current_h // 2 + 75)
+    time_bonus_rect = time_bonus_text.get_rect()
+    time_bonus_rect.center = (pygame.display.Info().current_w // 2, pygame.display.Info().current_h // 2 + 100)
+    final_score_text = score_font.render(f"Final Score: {final_score}", True, white_text)
+    final_score_rect = final_score_text.get_rect()
+    final_score_rect.center = (pygame.display.Info().current_w // 2, pygame.display.Info().current_h // 2 + 125)
+    time_font = score_font
+    time_text = time_font.render(f"Time Survived: {time_converted}", True, white_text)
+    time_rect = time_text.get_rect()
+    time_rect.center = (pygame.display.Info().current_w // 2, pygame.display.Info().current_h // 2 + 150)
+    return_to_menu_font = game_over_font
+    return_to_menu_text = return_to_menu_font.render("Quit to Main Menu", True, white_text)
+    return_to_menu_rect = return_to_menu_text.get_rect()
+    return_to_menu_rect.center = (pygame.display.Info().current_w // 2, pygame.display.Info().current_h // 2 + 200)
+    quit_text = return_to_menu_font.render("Quit to Desktop", True, white_text)
+    quit_rect = quit_text.get_rect()
+    quit_rect.center = (pygame.display.Info().current_w // 2, pygame.display.Info().current_h // 2 + 275)
+    high_score_text = score_font.render("High Scores", True, white_text)
+    high_score_rect = high_score_text.get_rect()
+    high_score_rect.center = (80, 15)
+
+    while running:
+        if is_high_score:
             high_score_font = pygame.font.SysFont(None, 40)
             high_score_input = high_score_font.render(input_text, True, white_text)
             high_score_input_text_rect = high_score_input.get_rect()
             high_score_input_rect = pygame.Rect(0, 0, 200, high_score_input_text_rect.height + 5)
             high_score_input_rect.center = (pygame.display.Info().current_w // 2, pygame.display.Info().current_h // 2 + 410)
             high_score_input_text_rect.center = high_score_input_rect.center
-        
-        game_over_font = pygame.font.SysFont(None, 100)
-        game_over_text = game_over_font.render("GAME OVER", True, white_text)
-        game_over_rect = game_over_text.get_rect()
-        game_over_rect.center = (pygame.display.Info().current_w // 2, pygame.display.Info().current_h // 2)
-        score_font = pygame.font.SysFont(None, 40)
-        score_text = score_font.render(f"Score: {score}", True, white_text)
-        time_bonus_text = score_font.render(f"Time Bonus: {time_bonus}", True, white_text)
-        score_rect = score_text.get_rect()
-        score_rect.center = (pygame.display.Info().current_w // 2, pygame.display.Info().current_h // 2 + 75)
-        time_bonus_rect = time_bonus_text.get_rect()
-        time_bonus_rect.center = (pygame.display.Info().current_w // 2, pygame.display.Info().current_h // 2 + 100)
-        final_score_text = score_font.render(f"Final Score: {final_score}", True, white_text)
-        final_score_rect = final_score_text.get_rect()
-        final_score_rect.center = (pygame.display.Info().current_w // 2, pygame.display.Info().current_h // 2 + 125)
-        time_font = score_font
-        time_text = time_font.render(f"Time Survived: {time_converted}", True, white_text)
-        time_rect = time_text.get_rect()
-        time_rect.center = (pygame.display.Info().current_w // 2, pygame.display.Info().current_h // 2 + 150)
-        return_to_menu_font = game_over_font
-        return_to_menu_text = return_to_menu_font.render("Quit to Main Menu", True, white_text)
-        return_to_menu_rect = return_to_menu_text.get_rect()
-        return_to_menu_rect.center = (pygame.display.Info().current_w // 2, pygame.display.Info().current_h // 2 + 200)
-        quit_text = return_to_menu_font.render("Quit to Desktop", True, white_text)
-        quit_rect = quit_text.get_rect()
-        quit_rect.center = (pygame.display.Info().current_w // 2, pygame.display.Info().current_h // 2 + 275)
-        high_score_text = score_font.render("High Scores", True, white_text)
-        high_score_rect = high_score_text.get_rect()
-        high_score_rect.center = (80, 15)
+
         menu_option_rects = [return_to_menu_rect, quit_rect, high_score_input_rect] if is_high_score else [return_to_menu_rect, quit_rect]
         selected_POS = menu_option_rects[menu_option_index]
         dt = pygame.time.Clock().tick(60) / 1000
@@ -91,6 +92,7 @@ def game_over(screen, game_options, score, time):
         flicker_timer += dt
         return_to_menu_button = pygame.draw.rect(screen, "gray8", return_to_menu_rect, 0)
         quit_button = pygame.draw.rect(screen, "gray8", quit_rect, 0)
+        
         if flicker_timer >= 0.5:
             flicker_draw = not flicker_draw
             flicker_timer = 0
@@ -126,7 +128,6 @@ def game_over(screen, game_options, score, time):
                                 "name": player_name,
                                 "score": final_score,
                                 "time": time_converted,
-                                "hard-mode": str(friendly_fire)
                             }
 
                             if is_high_score:
@@ -178,6 +179,9 @@ def time_converter(time):
     hours = time // 3600
     minutes = time // 60
     seconds = time % 60
+    if minutes >= 60:
+        hours += minutes // 60
+        minutes %= 60
     if time >= 3600:
         return f"{hours} hours, {minutes} minutes and {seconds} seconds" if hours > 1 else f"{hours} hour, {minutes} minutes and {seconds} seconds"
     elif time >= 60:

@@ -54,7 +54,6 @@ class AsteroidField(pygame.sprite.Sprite):
 
     def update(self, dt):
         self.spawn_timer += dt
-        opts = GameOptions()
         if self.spawn_timer > ASTEROID_SPAWN_RATE_SECONDS and self.asteroid_count < self.game_options.MAX_ASTEROIDS_ON_SCREEN:
             self.spawn_timer = 0
 

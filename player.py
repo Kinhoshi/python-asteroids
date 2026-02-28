@@ -18,6 +18,7 @@ class Player(TriangleShape):
         self.width = game_options.PLAYER_PIXEL_WIDTH
         self.lives = game_options.PLAYER_LIVES
         self.angular_velocity = 0
+        self.points = self.get_world_vertices()
 
 
     
@@ -27,6 +28,7 @@ class Player(TriangleShape):
 
     def update(self, dt):
         super().update(dt)
+        self.points = self.get_world_vertices()
         self.cooldown_timer -= dt
         self.velocity *= 0.997
         self.angular_velocity *= 0.95

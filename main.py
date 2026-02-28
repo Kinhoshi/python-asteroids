@@ -55,6 +55,7 @@ def game_loop():
     next_life_score = 25000
     score_text = game_font.render(f"Score: {score}", True, (255, 255, 255))
     score_rect = score_text.get_rect()
+    score_rect.center = (BASE_WIDTH // 2, 10)
     life_text = game_font.render(f"Lives:", True, (255, 255, 255))
     life_rect = life_text.get_rect()
     life_rect.center = (40, 10)
@@ -96,8 +97,6 @@ def game_loop():
     current_game_state = PLAYING
 
     while True:
-        score_rect.center = (pygame.display.Info().current_w // 2, 10)
-
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return
@@ -184,11 +183,11 @@ def game_loop():
             game_surface.fill("black")
             for sprites in drawable:
                 sprites.draw(game_surface)
+            game_surface.blit(score_text, score_rect)
+            game_surface.blit(life_text, life_rect)
             scaled_surface = pygame.transform.scale(game_surface, screen.get_size())
             score_text = game_font.render(f"Score: {score}", True, (255, 255, 255))
             screen.blit(scaled_surface, (0,0))
-            screen.blit(score_text, score_rect)
-            screen.blit(life_text, life_rect)
             pygame.display.flip()
             dt = fps.tick(60) / 1000
 

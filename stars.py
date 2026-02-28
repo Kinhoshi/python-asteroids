@@ -6,7 +6,6 @@ from circleshape import *
 class Star(CircleShape):
     def __init__(self, x, y, radius, game_options):
         super().__init__(x, y, radius)
-        self.radius = radius
         self.twinkle = game_options.STAR_TWINKLE_EFFECT
         if self.twinkle:
             self.color = ["blue", "yellow", "red", "purple", "green", "white"]

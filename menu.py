@@ -6,20 +6,9 @@ from config import GameOptions
 from menubg import MenuBackground
 from pygame_menu_custom_controller import MyCustomController
 
-
-screen = None
-configurable_options = None
-asteroids_theme = None
-SCREEN_WIDTH = 0
-SCREEN_HEIGHT = 0
 menus = weakref.WeakSet()
 
 def run_main_menu(screen_obj, game_surface, game_options_obj, theme_obj, game_loop_func):
-    global screen
-    global configurable_options
-    global asteroids_theme
-    global SCREEN_WIDTH
-    global SCREEN_HEIGHT
 
     screen = screen_obj
     surface = game_surface
@@ -38,7 +27,7 @@ def run_main_menu(screen_obj, game_surface, game_options_obj, theme_obj, game_lo
         menus.add(options_menu)
         options_menu.add.button('Difficulty Settings', difficulty_menu_internal())
         options_menu.add.button('Object Options', objects_sub_menu_internal())
-        options_menu.add.button('Video Options', video_options())
+        options_menu.add.button('Video Options', video_options(screen_obj, game_options_obj, theme_obj))
         options_menu.add.button('Back', pygame_menu.events.BACK)
         return options_menu
 
@@ -138,7 +127,7 @@ def pause_menu(screen_obj, game_surface, game_options_obj, theme_obj, game_loop_
         paused_menu.disable()
 
     paused_menu.add.button('Resume', paused_menu.disable)
-    paused_menu.add.button('Video Options', video_options())
+    paused_menu.add.button('Video Options', video_options(screen_obj, game_options_obj, theme_obj))
     paused_menu.add.button('Quit to Main Menu', quit_to_main)
     paused_menu.add.button('Quit to Desktop', lambda: (pygame.quit(), sys.exit()))
     while paused_menu.is_enabled():
@@ -150,10 +139,14 @@ def pause_menu(screen_obj, game_surface, game_options_obj, theme_obj, game_loop_
         paused_menu.mainloop(screen_obj, bgfun=lambda:menu_background.draw(screen_obj))
     return action['quit_to_main']
 # Video menu, accessible via main menu and pause menu
-def video_options():
+def video_options(screen_obj, game_options_obj, theme_obj):
     supported_resolutions = sorted(pygame.display.list_modes())
     resolutions_selector = []
     resolutions_index = 0
+    configurable_options = game_options_obj
+    SCREEN_WIDTH = configurable_options.SCREEN_WIDTH
+    SCREEN_HEIGHT = configurable_options.SCREEN_HEIGHT
+    asteroids_theme = theme_obj
 
     for i in range(len(supported_resolutions)):
         if supported_resolutions[i] == pygame.display.get_surface().get_size():
@@ -171,7 +164,7 @@ def video_options():
             m.resize(configurable_options.SCREEN_WIDTH, configurable_options.SCREEN_HEIGHT)
 
     def on_toggle_fullscreen(): # function to call fullscreen function and resize menus
-        toggle_fullscreen_and_adjust_screen()
+        toggle_fullscreen_and_adjust_screen(screen_obj, game_options_obj)
         resize_menus()
         
         new_resolutions_index = 0
@@ -189,15 +182,14 @@ def video_options():
     selector_widget = video_menu.add.selector('Resolution', 
         resolutions_selector, 
         default=resolutions_index, 
-        onreturn=lambda item, value: (set_resolution(value), resize_menus()))
+        onreturn=lambda item, value: (set_resolution(screen_obj, game_options_obj, value), resize_menus()))
     video_menu.add.button('Back', pygame_menu.events.BACK)
     return video_menu
 
 
-def toggle_fullscreen_and_adjust_screen(): # function to toggle fullscreen and set SCREEN WIDTH & HEIGHT to the new resolution
-    global SCREEN_WIDTH
-    global SCREEN_HEIGHT
-    global screen
+def toggle_fullscreen_and_adjust_screen(screen_obj, game_options_obj): # function to toggle fullscreen and set SCREEN WIDTH & HEIGHT to the new resolution
+    configurable_options = game_options_obj
+    screen = screen_obj
 
     pygame.display.toggle_fullscreen()
 
@@ -218,11 +210,9 @@ def toggle_fullscreen_and_adjust_screen(): # function to toggle fullscreen and s
     for m in menus:
         m._surface = screen
 
-def set_resolution(resolution): # function to set SCREEN WIDTH & HEIGHT to the resolution passed in
-    global SCREEN_WIDTH
-    global SCREEN_HEIGHT
-    global screen
-        
+def set_resolution(screen_obj, game_options_obj, resolution): # function to set SCREEN WIDTH & HEIGHT to the resolution passed in
+    configurable_options = game_options_obj
+    screen = screen_obj 
     configurable_options.SCREEN_WIDTH = resolution[0]
     configurable_options.SCREEN_HEIGHT = resolution[1]
     SCREEN_WIDTH = resolution[0]
