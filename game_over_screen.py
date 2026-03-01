@@ -8,6 +8,8 @@ from menu import run_main_menu
 
 def game_over(screen, game_options, score, time):
     background = MenuBackground(game_options)
+    difficulty = game_options.DIFFICULTY
+    high_score_file = f"high_scores_{difficulty}.json"
     friendly_fire = game_options.BULLETS_COLLIDE_WITH_PLAYER
     flicker_timer = 0
     flicker_draw = True
@@ -24,12 +26,12 @@ def game_over(screen, game_options, score, time):
     score_dict = {}
 
     try:
-        with open("high_scores.json", "r") as f:
+        with open(high_score_file, "r") as f:
             high_score_list = json.load(f)
 
     except FileNotFoundError:
-        print("Error: high_scores.json not found, creating blank file now.")
-        open("high_scores.json", "w").write("[]")
+        print(f"Error: {high_score_file} not found, creating blank file now.")
+        open(high_score_file, "w").write("[]")
 
     is_high_score = False
     if len(high_score_list) < 10:
@@ -48,23 +50,26 @@ def game_over(screen, game_options, score, time):
             congrats_2nd_line_rect.center = (pygame.display.Info().current_w // 2, pygame.display.Info().current_h // 2 + 375)
 
     game_over_font = pygame.font.SysFont(None, 100)
-    game_over_text = game_over_font.render("GAME OVER", True, white_text)
+    game_over_text = game_over_font.render("GAME OVER", True, (255, 0, 0))
     game_over_rect = game_over_text.get_rect()
     game_over_rect.center = (pygame.display.Info().current_w // 2, pygame.display.Info().current_h // 2)
     score_font = pygame.font.SysFont(None, 40)
     score_text = score_font.render(f"Score: {score}", True, white_text)
     time_bonus_text = score_font.render(f"Time Bonus: {time_bonus}", True, white_text)
     score_rect = score_text.get_rect()
-    score_rect.center = (pygame.display.Info().current_w // 2, pygame.display.Info().current_h // 2 + 75)
+    score_rect.center = (pygame.display.Info().current_w // 2, pygame.display.Info().current_h // 2 + 45)
     time_bonus_rect = time_bonus_text.get_rect()
-    time_bonus_rect.center = (pygame.display.Info().current_w // 2, pygame.display.Info().current_h // 2 + 100)
+    time_bonus_rect.center = (pygame.display.Info().current_w // 2, pygame.display.Info().current_h // 2 + 70)
     final_score_text = score_font.render(f"Final Score: {final_score}", True, white_text)
     final_score_rect = final_score_text.get_rect()
-    final_score_rect.center = (pygame.display.Info().current_w // 2, pygame.display.Info().current_h // 2 + 125)
+    final_score_rect.center = (pygame.display.Info().current_w // 2, pygame.display.Info().current_h // 2 + 95)
     time_font = score_font
     time_text = time_font.render(f"Time Survived: {time_converted}", True, white_text)
     time_rect = time_text.get_rect()
-    time_rect.center = (pygame.display.Info().current_w // 2, pygame.display.Info().current_h // 2 + 150)
+    time_rect.center = (pygame.display.Info().current_w // 2, pygame.display.Info().current_h // 2 + 120)
+    difficulty_text = score_font.render(f"Difficulty: {difficulty}", True, white_text)
+    difficulty_rect = difficulty_text.get_rect()
+    difficulty_rect.center = (pygame.display.Info().current_w // 2, pygame.display.Info().current_h // 2 + 150)
     return_to_menu_font = game_over_font
     return_to_menu_text = return_to_menu_font.render("Quit to Main Menu", True, white_text)
     return_to_menu_rect = return_to_menu_text.get_rect()
@@ -92,7 +97,7 @@ def game_over(screen, game_options, score, time):
         flicker_timer += dt
         return_to_menu_button = pygame.draw.rect(screen, "gray8", return_to_menu_rect, 0)
         quit_button = pygame.draw.rect(screen, "gray8", quit_rect, 0)
-        
+
         if flicker_timer >= 0.5:
             flicker_draw = not flicker_draw
             flicker_timer = 0
@@ -136,7 +141,7 @@ def game_over(screen, game_options, score, time):
                             if len(high_score_list) > 10:
                                 high_score_list.pop()
                             
-                            with open("high_scores.json", "w") as f:
+                            with open(high_score_file, "w") as f:
                                 json.dump(high_score_list, f, indent=2)
 
                 if is_high_score and selected_POS == high_score_input_rect and input_active:
@@ -163,6 +168,7 @@ def game_over(screen, game_options, score, time):
         screen.blit(time_text, time_rect)
         screen.blit(time_bonus_text, time_bonus_rect)
         screen.blit(final_score_text, final_score_rect)
+        screen.blit(difficulty_text, difficulty_rect)
         screen.blit(return_to_menu_text, return_to_menu_rect)
         screen.blit(quit_text, quit_rect)
         screen.blit(high_score_text, high_score_rect)

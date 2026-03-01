@@ -18,8 +18,138 @@ def run_main_menu(screen_obj, game_surface, game_options_obj, theme_obj, game_lo
     SCREEN_HEIGHT = configurable_options.SCREEN_HEIGHT
     custom_controller = MyCustomController()
     
+    # Track the difficulty selector widget to update it when custom options change
+    difficulty_selector_tracker = {'widget': None, 'custom_index': None}
+    # flag used while building the custom menu to suppress premature marking
+    _building_custom_menu = False
+    
     def set_attribute_internal(target, attr, value): # function to change GameOptions class items
+        config_parser = configurable_options.parser
+        match attr:
+            case 'ASTEROID_PIXEL_WIDTH':
+                config_parser["GameSettings"]["AsteroidPixelWidth"] = str(value)
+            case 'BULLET_PIXEL_WIDTH':
+                config_parser["GameSettings"]["BulletPixelWidth"] = str(value)
+            case 'PLAYER_PIXEL_WIDTH':
+                config_parser["GameSettings"]["PlayerPixelWidth"] = str(value)
+            case 'STAR_TWINKLE_EFFECT':
+                config_parser["GameSettings"]["StarTwinkleEffect"] = str(value)
+            case 'MAX_ASTEROIDS_ON_SCREEN':
+                config_parser["GameDifficulty"]["MaxAsteroidsOnScreen"] = str(value)
+            case 'PLAYER_LIVES':
+                config_parser["GameDifficulty"]["StartingLives"] = str(value)
+            case 'PLAYER_MAX_BULLETS_ON_SCREEN':
+                config_parser["GameDifficulty"]["MaxBulletsOnScreen"] = str(value)
+            case 'BULLETS_COLLIDE_WITH_PLAYER':
+                config_parser["GameDifficulty"]["BulletsKillPlayer"] = str(value)
+            case 'ASTEROID_KINDS':
+                config_parser["GameDifficulty"]["MaxTypesOfAsteroids"] = str(value)
+            case 'DIFFICULTY':
+                config_parser["GameDifficulty"]["Difficulty"] = str(value)
+            case _:
+                print("Unknown attribute")
+                return
+        with open("config.ini", "w") as configfile:
+            config_parser.write(configfile)
         setattr(target, attr, value)
+
+    def set_difficulty(item, value):
+        match value:
+            case 'Beginner':
+                set_attribute_internal(configurable_options, 'ASTEROID_KINDS', 2)
+                set_attribute_internal(configurable_options, 'DIFFICULTY', 'Beginner')
+                set_attribute_internal(configurable_options, 'MAX_ASTEROIDS_ON_SCREEN', 5)
+                set_attribute_internal(configurable_options, 'PLAYER_LIVES', 5)
+                set_attribute_internal(configurable_options, 'PLAYER_MAX_BULLETS_ON_SCREEN', 15)
+                set_attribute_internal(configurable_options, 'BULLETS_COLLIDE_WITH_PLAYER', False)
+
+            case 'Easy':
+                set_attribute_internal(configurable_options, 'ASTEROID_KINDS', 3)
+                set_attribute_internal(configurable_options, 'DIFFICULTY', 'Easy')
+                set_attribute_internal(configurable_options, 'MAX_ASTEROIDS_ON_SCREEN', 10)
+                set_attribute_internal(configurable_options, 'PLAYER_LIVES', 3)
+                set_attribute_internal(configurable_options, 'PLAYER_MAX_BULLETS_ON_SCREEN', 10)
+                set_attribute_internal(configurable_options, 'BULLETS_COLLIDE_WITH_PLAYER', False)
+
+            case 'Normal':
+                set_attribute_internal(configurable_options, 'ASTEROID_KINDS', 4)
+                set_attribute_internal(configurable_options, 'DIFFICULTY', 'Normal')
+                set_attribute_internal(configurable_options, 'MAX_ASTEROIDS_ON_SCREEN', 15)
+                set_attribute_internal(configurable_options, 'PLAYER_LIVES', 2)
+                set_attribute_internal(configurable_options, 'PLAYER_MAX_BULLETS_ON_SCREEN', 5)
+                set_attribute_internal(configurable_options, 'BULLETS_COLLIDE_WITH_PLAYER', False)
+
+            case 'Hard':
+                set_attribute_internal(configurable_options, 'ASTEROID_KINDS', 5)
+                set_attribute_internal(configurable_options, 'DIFFICULTY', 'Hard')
+                set_attribute_internal(configurable_options, 'MAX_ASTEROIDS_ON_SCREEN', 30)
+                set_attribute_internal(configurable_options, 'PLAYER_LIVES', 1)
+                set_attribute_internal(configurable_options, 'PLAYER_MAX_BULLETS_ON_SCREEN', 5)
+                set_attribute_internal(configurable_options, 'BULLETS_COLLIDE_WITH_PLAYER', False)
+
+            case 'Cruel':
+                set_attribute_internal(configurable_options, 'ASTEROID_KINDS', 5)
+                set_attribute_internal(configurable_options, 'DIFFICULTY', 'Cruel')
+                set_attribute_internal(configurable_options, 'MAX_ASTEROIDS_ON_SCREEN', 30)
+                set_attribute_internal(configurable_options, 'PLAYER_LIVES', 1)
+                set_attribute_internal(configurable_options, 'PLAYER_MAX_BULLETS_ON_SCREEN', 5)
+                set_attribute_internal(configurable_options, 'BULLETS_COLLIDE_WITH_PLAYER', True)
+
+            case 'Impossible':
+                set_attribute_internal(configurable_options, 'ASTEROID_KINDS', 5)
+                set_attribute_internal(configurable_options, 'DIFFICULTY', 'Impossible')
+                set_attribute_internal(configurable_options, 'MAX_ASTEROIDS_ON_SCREEN', 45)
+                set_attribute_internal(configurable_options, 'PLAYER_LIVES', 1)
+                set_attribute_internal(configurable_options, 'PLAYER_MAX_BULLETS_ON_SCREEN', 5)
+                set_attribute_internal(configurable_options, 'BULLETS_COLLIDE_WITH_PLAYER', True)
+            
+            case 'Custom':
+                # Custom difficulty selected, do nothing (custom options already set)
+                pass
+                
+            case _:
+                print("Unknown Difficulty")
+                return
+    
+    def mark_difficulty_as_custom():
+        """Check if current settings match a preset; if not, save difficulty as 'Custom' and update display."""
+        # Only save as Custom if the current difficulty is a preset (not already Custom)
+        # This prevents re-saving Custom on every config reload
+        if configurable_options.DIFFICULTY not in ['Custom']:
+            current_settings = (
+                configurable_options.ASTEROID_KINDS,
+                configurable_options.MAX_ASTEROIDS_ON_SCREEN,
+                configurable_options.PLAYER_LIVES,
+                configurable_options.PLAYER_MAX_BULLETS_ON_SCREEN,
+                configurable_options.BULLETS_COLLIDE_WITH_PLAYER
+            )
+            
+            presets = {
+                'Beginner': (2, 5, 5, 15, False),
+                'Easy': (3, 10, 3, 10, False),
+                'Normal': (4, 20, 2, 5, False),
+                'Hard': (5, 30, 1, 5, False),
+                'Cruel': (5, 30, 1, 5, True),
+                'Impossible': (5, 45, 1, 5, True)
+            }
+            
+            # Check if current settings match any preset
+            matches_preset = False
+            for preset_name, preset_settings in presets.items():
+                if current_settings == preset_settings:
+                    matches_preset = True
+                    break
+            
+            # If no preset matches, save as 'Custom'
+            if not matches_preset:
+                set_attribute_internal(configurable_options, 'DIFFICULTY', 'Custom')
+        
+        # Always update the selector display
+        if difficulty_selector_tracker['widget'] is not None and difficulty_selector_tracker['custom_index'] is not None:
+            try:
+                difficulty_selector_tracker['widget'].set_value(difficulty_selector_tracker['custom_index'])
+            except Exception:
+                pass
 
     # Sub-menus
     def options_menu_internal():
@@ -28,6 +158,7 @@ def run_main_menu(screen_obj, game_surface, game_options_obj, theme_obj, game_lo
         options_menu.add.button('Difficulty Settings', difficulty_menu_internal())
         options_menu.add.button('Object Options', objects_sub_menu_internal())
         options_menu.add.button('Video Options', video_options(screen_obj, game_options_obj, theme_obj))
+        options_menu.add.button('Control Settings', control_options_menu(screen_obj, game_options_obj, theme_obj))
         options_menu.add.button('Back', pygame_menu.events.BACK)
         return options_menu
 
@@ -46,8 +177,28 @@ def run_main_menu(screen_obj, game_surface, game_options_obj, theme_obj, game_lo
         objects_menu.add.button('Back', pygame_menu.events.BACK)
         return objects_menu
 
-
     def difficulty_menu_internal():
+        difficulty_index = 0
+        difficulty = configurable_options.DIFFICULTY
+        difficulties = [('Beginner', 'Beginner'),('Easy', 'Easy'), ('Normal', 'Normal'), ('Hard', 'Hard'), ('Cruel', 'Cruel'), ('Impossible', 'Impossible'), ('Custom', 'Custom')]
+        for i in range(len(difficulties)):
+            if difficulties[i][0] == difficulty:
+                difficulty_index = i
+                break
+        difficulty_menu = pygame_menu.Menu('Difficulty Settings', SCREEN_WIDTH, SCREEN_HEIGHT, theme=asteroids_theme)
+        menus.add(difficulty_menu)
+        selector_widget = difficulty_menu.add.selector('Difficulty', difficulties, default=difficulty_index, onchange=set_difficulty)
+        difficulty_selector_tracker['widget'] = selector_widget
+        difficulty_selector_tracker['custom_index'] = len(difficulties) - 1
+        # custom menu built at creation; initialization flag prevents early marking
+        difficulty_menu.add.button('Custom', custom_difficulty_menu_internal())
+        difficulty_menu.add.button('Back', pygame_menu.events.BACK)
+        return difficulty_menu
+
+    def custom_difficulty_menu_internal():
+        # flag to prevent mark during initial construction
+        nonlocal _building_custom_menu
+        _building_custom_menu = True
         current_asteroid_kinds = configurable_options.ASTEROID_KINDS
         current_max_asteroids = configurable_options.MAX_ASTEROIDS_ON_SCREEN
         current_max_bullets = configurable_options.PLAYER_MAX_BULLETS_ON_SCREEN
@@ -59,18 +210,22 @@ def run_main_menu(screen_obj, game_surface, game_options_obj, theme_obj, game_lo
             player_lives_index = 1
         elif player_lives == 3:
             player_lives_index = 2
+        elif player_lives == 5:
+            player_lives_index = 3
 
         asteroid_kinds_index = 0
-        if current_asteroid_kinds == 4:
-            asteroid_kinds_index = 1
-        elif current_asteroid_kinds == 5:
-            asteroid_kinds_index = 2
+        asteroid_kind_selections = [('2', 2), ('3', 3), ('4', 4), ('5', 5)]
+        for i in range(len(asteroid_kind_selections)):
+            if asteroid_kind_selections[i][0] == str(current_asteroid_kinds):
+                asteroid_kinds_index = i
+                break
 
         max_asteroids_index = 0
-        if current_max_asteroids == 30:
-            max_asteroids_index = 1
-        elif current_max_asteroids == 45:
-            max_asteroids_index = 2
+        max_asteroids_selections = [('5', 5), ('10', 10), ('15', 15), ('20', 20), ('30', 30), ('45', 45)]
+        for i in range(len(max_asteroids_selections)):
+            if max_asteroids_selections[i][0] == str(current_max_asteroids):
+                max_asteroids_index = i
+                break
 
         max_bullets_index = 0
         if current_max_bullets == 10:
@@ -78,19 +233,29 @@ def run_main_menu(screen_obj, game_surface, game_options_obj, theme_obj, game_lo
         elif current_max_bullets == 15:
             max_bullets_index = 2
 
-        difficulty_menu = pygame_menu.Menu('Difficulty Settings', SCREEN_WIDTH, SCREEN_HEIGHT, theme=asteroids_theme)
-        menus.add(difficulty_menu)
-        #difficulty_menu.add.label('Max bullets on screen at one time; default is 5', font_size=15, font_color='white')
-        #difficulty_menu.add.selector('Player Max Bullets', [('Default', 5), ('Double', 10), ('Triple', 15)], default=max_bullets_index, onchange=lambda item, value: set_attribute_internal(configurable_options, 'PLAYER_MAX_BULLETS_ON_SCREEN', value))
-        #difficulty_menu.add.selector('Player Lives', [('1', 1), ('2', 2), ('3', 3)], default=player_lives_index, onchange=lambda item, value: set_attribute_internal(configurable_options, 'PLAYER_LIVES', value))
-        difficulty_menu.add.label('Allows your own bullets to collide with you; essentially friendly fire.', font_size=15, font_color='white')
-        difficulty_menu.add.selector('Bullets Collide w/Player', [('Off', False), ('On', True)], default=0 if bullets_collide_with_player == False else 1, onchange=lambda item, value: set_attribute_internal(configurable_options, 'BULLETS_COLLIDE_WITH_PLAYER', value))
-        #difficulty_menu.add.label('Prevents asteroids from spawning endlessly; default is 15', font_size=15, font_color='white')
-        #difficulty_menu.add.selector('Max Asteroids', [('Default', 15), ('Double', 30), ('Triple', 45)], default=max_asteroids_index, onchange=lambda item, value: set_attribute_internal(configurable_options, 'MAX_ASTEROIDS_ON_SCREEN', value))
-        #difficulty_menu.add.label('Allows bigger asteroids to spawn; default is 3 different sizes', font_size=15, font_color='white')
-        #difficulty_menu.add.selector('Asteroid Sizes', [('Default', 3), ('4', 4), ('5', 5)], default=asteroid_kinds_index, onchange=lambda item, value: set_attribute_internal(configurable_options, 'ASTEROID_KINDS', value))
-        difficulty_menu.add.button('Back', pygame_menu.events.BACK)
-        return difficulty_menu
+        custom_difficulty_menu = pygame_menu.Menu('Custom Difficulty Settings', SCREEN_WIDTH, SCREEN_HEIGHT, theme=asteroids_theme)
+        menus.add(custom_difficulty_menu)
+        custom_difficulty_menu.add.label('Max bullets on screen at one time; default is 5', font_size=15, font_color='white')
+        # helper to update attribute only when it actually changes
+        def custom_option_changed(attr, value):
+            if getattr(configurable_options, attr) != value:
+                set_attribute_internal(configurable_options, attr, value)
+                if not _building_custom_menu:
+                    mark_difficulty_as_custom()
+        
+        custom_difficulty_menu.add.selector('Player Max Bullets', [('Default', 5), ('Double', 10), ('Triple', 15)], default=max_bullets_index, onchange=lambda item, value: custom_option_changed('PLAYER_MAX_BULLETS_ON_SCREEN', value))
+        custom_difficulty_menu.add.selector('Player Lives', [('1', 1), ('2', 2), ('3', 3), ('5', 5)], default=player_lives_index, onchange=lambda item, value: custom_option_changed('PLAYER_LIVES', value))
+        custom_difficulty_menu.add.label('Allows your own bullets to collide with you; essentially friendly fire.', font_size=15, font_color='white')
+        custom_difficulty_menu.add.selector('Bullets Collide w/Player', [('Off', False), ('On', True)], default=0 if bullets_collide_with_player == False else 1, onchange=lambda item, value: custom_option_changed('BULLETS_COLLIDE_WITH_PLAYER', value))
+        custom_difficulty_menu.add.label('Prevents asteroids from spawning endlessly; default is 15', font_size=15, font_color='white')
+        custom_difficulty_menu.add.selector('Max Asteroids', max_asteroids_selections, default=max_asteroids_index, onchange=lambda item, value: custom_option_changed('MAX_ASTEROIDS_ON_SCREEN', value))
+        custom_difficulty_menu.add.label('Allows bigger asteroids to spawn; default is 3 different sizes', font_size=15, font_color='white')
+        custom_difficulty_menu.add.selector('Asteroid Sizes', asteroid_kind_selections, default=asteroid_kinds_index, onchange=lambda item, value: custom_option_changed('ASTEROID_KINDS', value))
+        custom_difficulty_menu.add.button('Back', pygame_menu.events.BACK)
+        _building_custom_menu = False
+        return custom_difficulty_menu
+
+
 
     menu_background = MenuBackground(configurable_options)
     asteroids_theme.background_color = (0, 0, 0, 0)
@@ -128,6 +293,7 @@ def pause_menu(screen_obj, game_surface, game_options_obj, theme_obj, game_loop_
 
     paused_menu.add.button('Resume', paused_menu.disable)
     paused_menu.add.button('Video Options', video_options(screen_obj, game_options_obj, theme_obj))
+    paused_menu.add.button('Control Settings', control_options_menu(screen_obj, game_options_obj, theme_obj))
     paused_menu.add.button('Quit to Main Menu', quit_to_main)
     paused_menu.add.button('Quit to Desktop', lambda: (pygame.quit(), sys.exit()))
     while paused_menu.is_enabled():
@@ -138,6 +304,7 @@ def pause_menu(screen_obj, game_surface, game_options_obj, theme_obj, game_loop_
                 sys.exit()
         paused_menu.mainloop(screen_obj, bgfun=lambda:menu_background.draw(screen_obj))
     return action['quit_to_main']
+
 # Video menu, accessible via main menu and pause menu
 def video_options(screen_obj, game_options_obj, theme_obj):
     supported_resolutions = sorted(pygame.display.list_modes())
@@ -217,6 +384,10 @@ def set_resolution(screen_obj, game_options_obj, resolution): # function to set 
     configurable_options.SCREEN_HEIGHT = resolution[1]
     SCREEN_WIDTH = resolution[0]
     SCREEN_HEIGHT = resolution[1]
+    configurable_options.parser["VideoSettings"]["Width"] = str(resolution[0])
+    configurable_options.parser["VideoSettings"]["Height"] = str(resolution[1])
+    with open("config.ini", "w") as configfile:
+        configurable_options.parser.write(configfile)
     
     if pygame.display.get_surface().get_flags() & pygame.FULLSCREEN:
         for m in menus:
@@ -228,3 +399,14 @@ def set_resolution(screen_obj, game_options_obj, resolution): # function to set 
 
     for m in menus:
         m._surface = screen
+
+def control_options_menu(screen_obj, game_options_obj, theme_obj):
+    configurable_options = game_options_obj
+    SCREEN_WIDTH = configurable_options.SCREEN_WIDTH
+    SCREEN_HEIGHT = configurable_options.SCREEN_HEIGHT
+    asteroids_theme = theme_obj
+
+    controls_menu = pygame_menu.Menu('Control Settings', SCREEN_WIDTH, SCREEN_HEIGHT, theme=asteroids_theme)
+    menus.add(controls_menu)
+    controls_menu.add.button('Back', pygame_menu.events.BACK)
+    return controls_menu
