@@ -1,7 +1,7 @@
 import pygame
-from constants import BASE_WIDTH, BASE_HEIGHT
+from constants import BASE_WIDTH, BASE_HEIGHT, LINE_WIDTH
 
-# class for star objects
+# class for star & particle objects
 class CircleShape(pygame.sprite.Sprite):
     def __init__(self, x, y, radius):
         # we will be using this later
@@ -13,10 +13,10 @@ class CircleShape(pygame.sprite.Sprite):
         self.position = pygame.Vector2(x, y)
         self.velocity = pygame.Vector2(0, 0)
         self.radius = radius
+        self.color = "white"
 
     def draw(self, screen):
-        # must override
-        pass
+        pygame.draw.circle(screen, self.color, self.position, self.radius, LINE_WIDTH)
 
     def update(self, dt):
         SCREEN_WIDTH = BASE_WIDTH

@@ -6,7 +6,7 @@ from config import GameOptions
 
 class Lives(TriangleShape):
     def __init__(self, x, y):
-        super().__init__(x, y)
+        super().__init__(x, y, length=PLAYER_LENGTH)
         game_options = GameOptions()
         self.width = game_options.PLAYER_PIXEL_WIDTH
         self.position = pygame.Vector2(x, y)

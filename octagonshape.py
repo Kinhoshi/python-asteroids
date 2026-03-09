@@ -1,4 +1,4 @@
-from constants import *
+from constants import BASE_WIDTH, BASE_HEIGHT
 import pygame
 import math
 import random

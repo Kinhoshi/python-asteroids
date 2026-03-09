@@ -11,3 +11,6 @@ high_scores*.json
 
 # Virtual environments
 .venv
+
+# other files
+*Zone.Identifier

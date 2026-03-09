@@ -2,12 +2,14 @@ from octagonshape import *
 from constants import *
 from logger import *
 from config import GameOptions
+from powerups import PowerUp_Box
 import random
 
 
 class Asteroid(OctagonShape):
     def __init__(self, x, y, radius, game_options):
         super().__init__(x, y, radius)
+        from circleshape import CircleShape
         self.rotation = 20
         self.rotation_speed = random.randint(0, ASTEROID_MAX_ROTATION_SPEED)
         self.color = "gray" + f"{random.randint(20, 100)}"
@@ -15,6 +17,8 @@ class Asteroid(OctagonShape):
         self.width = self.game_options.ASTEROID_PIXEL_WIDTH
         self.time_alive = 0 # used for background asteroids
         self.child = False # used for score multiplier
+        #self.powerup = random.randint(1, 10) == 10
+        self.powerup = True
         value = random.randint(1, 20)
         if value == 10:
             self.color = "gold4"
@@ -28,12 +32,14 @@ class Asteroid(OctagonShape):
             self.velocity = self.velocity.normalize() * ASTEROID_MAX_SPEED
 
     def draw(self, screen):
-        color = self.color
         points = self.get_world_vertices()
-        pygame.draw.polygon(screen, color, points, self.width)
+        pygame.draw.polygon(screen, self.color, points, self.width)
 
     def split(self):
         self.kill()
+        if self.powerup:
+            powerup = PowerUp_Box(self.position.x, self.position.y, 30, 30)
+
         old_radius = self.radius
         if self.radius <= ASTEROID_MIN_RADIUS:
             return

@@ -2,11 +2,38 @@ import pygame
 import pygame_menu
 import sys
 import weakref
+import controls
 from config import GameOptions
 from menubg import MenuBackground
 from pygame_menu_custom_controller import MyCustomController
 
 menus = weakref.WeakSet()
+
+def draw_rebind_overlay(screen, screen_width, screen_height, font, esc_font):
+    """Draws an overlay on the screen when waiting for a keybind."""
+    if not controls.waiting_for_key:
+        return
+
+    action_map = {
+        "accelerate": "Accelerate", "acceleratealt": "Accelerate (Alt)",
+        "rotateleft": "Rotate Left", "rotateleftalt": "Rotate Left (Alt)",
+        "rotateright": "Rotate Right", "rotaterightalt": "Rotate Right (Alt)",
+        "shoot": "Shoot", "shootalt": "Shoot (Alt)",
+        "pause": "Pause", "pausealt": "Pause (Alt)"
+    }
+    display_action_name = action_map.get(controls.waiting_for_key, controls.waiting_for_key.upper())
+
+    overlay = pygame.Surface((screen_width, screen_height), pygame.SRCALPHA)
+    overlay.fill((0, 0, 0, 180))
+    screen.blit(overlay, (0, 0))
+
+    text_surface = font.render(f"Press a key or mouse button to bind to '{display_action_name}'", True, (255, 255, 0))
+    text_rect = text_surface.get_rect(center=(screen_width / 2, screen_height / 2))
+    screen.blit(text_surface, text_rect)
+    
+    esc_text_surface = esc_font.render("Press ESC to cancel", True, (200, 200, 200))
+    esc_text_rect = esc_text_surface.get_rect(center=(screen_width / 2, text_rect.bottom + 30))
+    screen.blit(esc_text_surface, esc_text_rect)
 
 def run_main_menu(screen_obj, game_surface, game_options_obj, theme_obj, game_loop_func):
 
@@ -114,7 +141,6 @@ def run_main_menu(screen_obj, game_surface, game_options_obj, theme_obj, game_lo
     def mark_difficulty_as_custom():
         """Check if current settings match a preset; if not, save difficulty as 'Custom' and update display."""
         # Only save as Custom if the current difficulty is a preset (not already Custom)
-        # This prevents re-saving Custom on every config reload
         if configurable_options.DIFFICULTY not in ['Custom']:
             current_settings = (
                 configurable_options.ASTEROID_KINDS,
@@ -190,7 +216,6 @@ def run_main_menu(screen_obj, game_surface, game_options_obj, theme_obj, game_lo
         selector_widget = difficulty_menu.add.selector('Difficulty', difficulties, default=difficulty_index, onchange=set_difficulty)
         difficulty_selector_tracker['widget'] = selector_widget
         difficulty_selector_tracker['custom_index'] = len(difficulties) - 1
-        # custom menu built at creation; initialization flag prevents early marking
         difficulty_menu.add.button('Custom', custom_difficulty_menu_internal())
         difficulty_menu.add.button('Back', pygame_menu.events.BACK)
         return difficulty_menu
@@ -266,13 +291,39 @@ def run_main_menu(screen_obj, game_surface, game_options_obj, theme_obj, game_lo
     menu.add.button('Play', game_loop_func)
     menu.add.button('Options', options_menu_internal())
     menu.add.button('Quit', pygame_menu.events.EXIT)
+
+    rebind_font = pygame.font.SysFont(None, 40)
+    rebind_esc_font = pygame.font.SysFont(None, 30)
+
     while menu.is_enabled():
-        all_events = pygame.event.get()
-        for event in all_events:
+        events_for_menu = pygame.event.get()
+        
+        for event in events_for_menu:
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
-        menu.mainloop(screen, bgfun=lambda: menu_background.draw(screen), disable_event=True, events=all_events)
+
+        # Handle control rebinding
+        if controls.waiting_for_key:
+            for event in events_for_menu:
+                if controls.handle_input_event(event, configurable_options.parser, configurable_options):
+                    # Refresh widgets in the current menu
+                    current_menu = menu.get_current()
+                    for widget in current_menu.get_widgets():
+                        if hasattr(widget, 'update_binding_display'):
+                            widget.update_binding_display()
+                    break
+            # Consume events while waiting for key
+            events_for_menu = []
+        
+        menu.update(events_for_menu)
+
+        menu_background.draw(screen)
+        if menu.is_enabled():
+            menu.draw(screen)
+        draw_rebind_overlay(screen, SCREEN_WIDTH, SCREEN_HEIGHT, rebind_font, rebind_esc_font)
+
+        pygame.display.flip()
 
 
 # Pause menu
@@ -280,12 +331,19 @@ def pause_menu(screen_obj, game_surface, game_options_obj, theme_obj, game_loop_
     custom_controller = MyCustomController()
     menu_background = MenuBackground(game_options_obj)
     theme_obj.background_color = (0, 0, 0, 0)
+    SCREEN_WIDTH = game_options_obj.SCREEN_WIDTH
+    SCREEN_HEIGHT = game_options_obj.SCREEN_HEIGHT
     
     paused_menu = pygame_menu.Menu('Paused', game_options_obj.SCREEN_WIDTH, game_options_obj.SCREEN_HEIGHT, theme=theme_obj)
     paused_menu.set_controller(custom_controller)
     menus.add(paused_menu)
     
-    action = {'quit_to_main': False}
+    action = {'quit_to_main': False,
+    'restart_game': False}
+
+    def restart_game():
+        action['restart_game'] = True
+        paused_menu.disable()
 
     def quit_to_main(): # function to quit game and return to main menu
         action['quit_to_main'] = True
@@ -294,16 +352,41 @@ def pause_menu(screen_obj, game_surface, game_options_obj, theme_obj, game_loop_
     paused_menu.add.button('Resume', paused_menu.disable)
     paused_menu.add.button('Video Options', video_options(screen_obj, game_options_obj, theme_obj))
     paused_menu.add.button('Control Settings', control_options_menu(screen_obj, game_options_obj, theme_obj))
+    paused_menu.add.button('Restart Game', restart_game)
     paused_menu.add.button('Quit to Main Menu', quit_to_main)
     paused_menu.add.button('Quit to Desktop', lambda: (pygame.quit(), sys.exit()))
+
+    rebind_font = pygame.font.SysFont(None, 40)
+    rebind_esc_font = pygame.font.SysFont(None, 30)
+
     while paused_menu.is_enabled():
-        all_events = pygame.event.get()
-        for event in all_events:
+        events_for_menu = pygame.event.get()
+        
+        for event in events_for_menu:
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
-        paused_menu.mainloop(screen_obj, bgfun=lambda:menu_background.draw(screen_obj))
-    return action['quit_to_main']
+
+        if controls.waiting_for_key:
+            for event in events_for_menu:
+                if controls.handle_input_event(event, game_options_obj.parser, game_options_obj):
+                    current_menu = paused_menu.get_current()
+                    for widget in current_menu.get_widgets():
+                        if hasattr(widget, 'update_binding_display'):
+                            widget.update_binding_display()
+                    break
+            events_for_menu = []
+        
+        paused_menu.update(events_for_menu)
+
+        menu_background.draw(screen_obj)
+        if paused_menu.is_enabled():
+            paused_menu.draw(screen_obj)
+        draw_rebind_overlay(screen_obj, SCREEN_WIDTH, SCREEN_HEIGHT, rebind_font, rebind_esc_font)
+
+        pygame.display.flip()
+
+    return action
 
 # Video menu, accessible via main menu and pause menu
 def video_options(screen_obj, game_options_obj, theme_obj):
@@ -343,8 +426,20 @@ def video_options(screen_obj, game_options_obj, theme_obj):
                 break
         selector_widget.set_value(new_resolutions_index)
 
+    def toggle_fps_counter(item, value):
+        configurable_options.FPS_COUNTER = value
+        if value:
+            configurable_options.parser["VideoSettings"]["FPSCounter"] = "True"
+        else:
+            configurable_options.parser["VideoSettings"]["FPSCounter"] = "False"
+
+        with open("config.ini", "w") as configfile:
+            configurable_options.parser.write(configfile)
+
+
     video_menu.add.label('Press ENTER to toggle fullscreen', font_size=15, font_color=(255, 255, 255))
     video_menu.add.button('Toggle Fullscreen', on_toggle_fullscreen)
+    video_menu.add.selector('FPS Counter', [('On', True), ('Off', False)], default=0 if configurable_options.FPS_COUNTER == True else 1, onchange=toggle_fps_counter)
     video_menu.add.label('Press ENTER to apply resolution change', font_size=15, font_color=(255, 255, 255))
     selector_widget = video_menu.add.selector('Resolution', 
         resolutions_selector, 
@@ -362,12 +457,17 @@ def toggle_fullscreen_and_adjust_screen(screen_obj, game_options_obj): # functio
 
     is_fullscreen = pygame.display.get_surface().get_flags() & pygame.FULLSCREEN
     if is_fullscreen:
+        configurable_options.parser["VideoSettings"]["Fullscreen"] = "True"
         info = pygame.display.Info()
         resolution = (info.current_w, info.current_h)
         screen = pygame.display.set_mode(resolution, pygame.FULLSCREEN)
-    else:
-        resolution = (800, 600)
+    elif not is_fullscreen:
+        configurable_options.parser["VideoSettings"]["Fullscreen"] = "False"
+        resolution = configurable_options.SCREEN_WIDTH, configurable_options.SCREEN_HEIGHT
         screen = pygame.display.set_mode(resolution)
+
+    with open("config.ini", "w") as configfile:
+        configurable_options.parser.write(configfile)
 
     configurable_options.SCREEN_WIDTH = resolution[0]
     configurable_options.SCREEN_HEIGHT = resolution[1]
@@ -408,5 +508,25 @@ def control_options_menu(screen_obj, game_options_obj, theme_obj):
 
     controls_menu = pygame_menu.Menu('Control Settings', SCREEN_WIDTH, SCREEN_HEIGHT, theme=asteroids_theme)
     menus.add(controls_menu)
+    
+    def add_bind_btn(label, action, attr_name):
+        def get_text():
+            val = getattr(configurable_options, attr_name)
+            return f"{label}: {controls.get_key_name(val)}"
+        
+        btn = controls_menu.add.button(get_text(), lambda: controls.start_rebind(action))
+        btn.update_binding_display = lambda: btn.set_title(get_text())
+        return btn
+
+    add_bind_btn('Accelerate', "accelerate", "CONTROLS_ACCELERATE")
+    add_bind_btn('Accelerate Alt', "acceleratealt", "CONTROLS_ACCELERATE_ALT")
+    add_bind_btn('Rotate Left', "rotateleft", "CONTROLS_ROTATE_LEFT")
+    add_bind_btn('Rotate Left Alt', "rotateleftalt", "CONTROLS_ROTATE_LEFT_ALT")
+    add_bind_btn('Rotate Right', "rotateright", "CONTROLS_ROTATE_RIGHT")
+    add_bind_btn('Rotate Right Alt', "rotaterightalt", "CONTROLS_ROTATE_RIGHT_ALT")
+    add_bind_btn('Shoot', "shoot", "CONTROLS_SHOOT")
+    add_bind_btn('Shoot Alt', "shootalt", "CONTROLS_SHOOT_ALT")
+    add_bind_btn('Pause', "pause", "CONTROLS_PAUSE")
+    add_bind_btn('Pause Alt', "pausealt", "CONTROLS_PAUSE_ALT")
     controls_menu.add.button('Back', pygame_menu.events.BACK)
     return controls_menu

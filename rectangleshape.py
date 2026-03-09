@@ -1,57 +1,42 @@
 import pygame
 import math
-from constants import *
+from constants import LINE_WIDTH, BASE_WIDTH, BASE_HEIGHT
 
-# player class
-class TriangleShape(pygame.sprite.Sprite):
-    def __init__(self, x, y, length):
+class RectangleShape(pygame.sprite.Sprite):
+    def __init__(self, x, y, width, height):
         if hasattr(self, "containers"):
             super().__init__(self.containers)
         else:
             super().__init__()
-        
+
         self.position = pygame.Vector2(x, y)
-        self.velocity = pygame.Vector2(0, 0)
-        self.rotation = 0
-        self.length = length
-        half_length = self.length / 2
-        self.local_vertices = [
-            pygame.Vector2(0, self.length),
-            pygame.Vector2(-half_length, -self.length),
-            pygame.Vector2(half_length, -self.length)
-        ]
-        self.radius = max(v.length() for v in self.local_vertices)
+        self.width = width
+        self.height = height
+        self.color = "white"
+        self.vertices = self.get_world_vertices()
 
     def draw(self, screen):
-        pass # must override
+        # override
+        pass
 
     def update(self, dt):
-        SCREEN_WIDTH = BASE_WIDTH
-        SCREEN_HEIGHT = BASE_HEIGHT
-        if self.position.x > SCREEN_WIDTH:
-            self.position.x -= SCREEN_WIDTH
-        if self.position.x < 0:
-            self.position.x += SCREEN_WIDTH
-        if self.position.y > SCREEN_HEIGHT:
-            self.position.y -= SCREEN_HEIGHT
-        if self.position.y < 0:
-            self.position.y += SCREEN_HEIGHT
-        
+        # override
+        pass
+    
     def get_world_vertices(self):
-        vertices = []
-        for p in self.local_vertices:
-            rotated = p.rotate(self.rotation)
-            world_vertex = self.position + rotated
-            vertices.append(world_vertex)
-        return vertices
+        return [
+            pygame.Vector2(self.position.x - self.width / 2, self.position.y - self.height / 2),
+            pygame.Vector2(self.position.x + self.width / 2, self.position.y - self.height / 2),
+            pygame.Vector2(self.position.x + self.width / 2, self.position.y + self.height / 2),
+            pygame.Vector2(self.position.x - self.width / 2, self.position.y + self.height / 2)
+        ]
 
     def get_edges(self):
-        vertices = self.get_world_vertices()
         edges = []
 
-        for i in range(len(vertices)):
-            start = vertices[i]
-            end = vertices[(i + 1) % len(vertices)]
+        for i in range(len(self.vertices)):
+            start = self.vertices[i]
+            end = self.vertices[(i + 1) % len(self.vertices)]
             edges.append((start, end))
         return edges
 
@@ -90,3 +75,5 @@ class TriangleShape(pygame.sprite.Sprite):
         if not other.overlaps_on_all_axes(self):
             return False
         return True
+
+        

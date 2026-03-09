@@ -10,7 +10,6 @@ def game_over(screen, game_options, score, time):
     background = MenuBackground(game_options)
     difficulty = game_options.DIFFICULTY
     high_score_file = f"high_scores_{difficulty}.json"
-    friendly_fire = game_options.BULLETS_COLLIDE_WITH_PLAYER
     flicker_timer = 0
     flicker_draw = True
     white_text = (255, 255, 255)
