@@ -68,10 +68,11 @@ def handle_input_event(event, parser, game_options=None):
 
     new_value = None
     if event.type == pygame.KEYDOWN:
-        if event.key == pygame.K_ESCAPE:
-            waiting_for_key = None
-            return False
-        new_value = event.key
+        if waiting_for_key != "pause" or waiting_for_key != "pausealt":
+            if event.key == pygame.K_ESCAPE:
+                waiting_for_key = None
+                return False
+            new_value = event.key
     elif event.type == pygame.MOUSEBUTTONDOWN:
         new_value = -event.button
 

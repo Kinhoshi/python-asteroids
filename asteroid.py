@@ -12,13 +12,12 @@ class Asteroid(OctagonShape):
         from circleshape import CircleShape
         self.rotation = 20
         self.rotation_speed = random.randint(0, ASTEROID_MAX_ROTATION_SPEED)
-        self.color = "gray" + f"{random.randint(20, 100)}"
+        self.color = "gray" + f"{random.randint(25, 100)}"
         self.game_options = game_options
         self.width = self.game_options.ASTEROID_PIXEL_WIDTH
         self.time_alive = 0 # used for background asteroids
         self.child = False # used for score multiplier
-        #self.powerup = random.randint(1, 10) == 10
-        self.powerup = True
+        self.powerup = random.randint(1, 50) == 10
         value = random.randint(1, 20)
         if value == 10:
             self.color = "gold4"
@@ -38,7 +37,7 @@ class Asteroid(OctagonShape):
     def split(self):
         self.kill()
         if self.powerup:
-            powerup = PowerUp_Box(self.position.x, self.position.y, 30, 30)
+            powerup = PowerUp_Box(self.position.x, self.position.y, 40, 40, self.game_options)
 
         old_radius = self.radius
         if self.radius <= ASTEROID_MIN_RADIUS:

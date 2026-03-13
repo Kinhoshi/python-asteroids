@@ -2,7 +2,6 @@ import controls
 import math
 import pygame
 import pygame_menu
-import copy
 import random
 import sys
 import time
@@ -25,7 +24,7 @@ from powerups import PowerUp_Box, Laser
 
 
 pygame.init()
-#pygame.mixer.init()
+pygame.mixer.init()
 configurable_options = GameOptions()
 SCREEN_WIDTH = configurable_options.SCREEN_WIDTH
 SCREEN_HEIGHT = configurable_options.SCREEN_HEIGHT
@@ -49,17 +48,24 @@ PAUSED = "PAUSED"
 PLAYING = "PLAYING"
 MENU = "MENU"
 
-def game_loop():
-    global current_game_state
-    global screen
-    global configurable_options
+def main():
+    print(f"Starting Asteroids with pygame version: {pygame.version.ver}\nScreen width: {SCREEN_WIDTH}\nScreen height: {SCREEN_HEIGHT}")
+    pygame.font.init()
+    pygame.display.set_caption("py-Asteroids")
+    run_main_menu(screen, game_surface, configurable_options, asteroids_theme, game_loop)
 
-    # This outer loop handles restarting the game.
-    # When the game ends or is restarted, it will loop and re-initialize everything.
+def game_loop():
     while True:
+        global current_game_state
+        global screen
+        global configurable_options
+
         game_font = pygame.font.SysFont(None, 30)
+        ammo_font = pygame.font.SysFont(None, 25)
         score = 0
         time_alive = 0
+        laser_timer = 5
+        laser_timer_counter = 0
         danger_score_multiplier = 1
         asteroid_score_bonus = 0
         next_life_score = 25000
@@ -86,28 +92,28 @@ def game_loop():
         lives = pygame.sprite.Group()
         powerups = pygame.sprite.Group()
 
+
+
         Player.containers = (updatable, drawable)
         Lives.containers = (lives, updatable, drawable)
         Particle.containers = (particles, updatable, drawable)
         Shot.containers = (shots, updatable, drawable)
         Asteroid.containers = (asteroids, updatable, drawable)
         AsteroidField.containers = (updatable)
-        
-        # Create a copy of options for AsteroidField that enforces logical game size
-        asteroid_field_options = copy.copy(configurable_options)
-        asteroid_field_options.SCREEN_WIDTH = BASE_WIDTH
-        asteroid_field_options.SCREEN_HEIGHT = BASE_HEIGHT
-        asteroid_field = AsteroidField(asteroid_field_options)
-
+        asteroid_field = AsteroidField(configurable_options)
         Star.containers = (stars, drawable)
         StarField(400, configurable_options)
         PowerUp_Box.containers = (powerups, updatable, drawable)
 
         ship = Player(BASE_WIDTH / 2, BASE_HEIGHT / 2, configurable_options)
 
-        last_screen_width = configurable_options.SCREEN_WIDTH
-        last_screen_height = configurable_options.SCREEN_HEIGHT
-
+        ammo_text = ammo_font.render(f"Homing Missiles: {ship.ammo}", True, (255, 255, 255))
+        ammo_rect = ammo_text.get_rect()
+        ammo_rect.center = (75, 60)
+        laser_text = ammo_font.render(f"Laser! Time Left: {laser_timer}", True, (255, 255, 255))
+        laser_text_rect = laser_text.get_rect()
+        laser_text_rect.center = (85, 60)
+        
         life_shape_pos_x = 25
         for i in range(0, ship.lives):
             if i == 0:
@@ -115,18 +121,17 @@ def game_loop():
             if i > 0:
                 life_shape = Lives(life_rect.right + 15 + life_shape_pos_x, life_rect.centery + 15)
                 life_shape_pos_x += 25
+
             updatable.add(life_shape)
             drawable.add(life_shape)
 
-        current_game_state = PLAYING
-        game_is_running = True
 
-        while game_is_running:
-            # Calculate dt at the START of the frame to prevent spikes
-            dt = clock.tick(60) / 1000
-            #asteroid_explosions = random.choice(["explosion.wav", "explosion2.wav", "explosion3.wav", "explosion4.wav"])
-            #asteroid_explosion_sound = pygame.mixer.Sound(f"data/{asteroid_explosions}")
-            #asteroid_explosion_sound.set_volume(0.2)
+        current_game_state = PLAYING
+
+        while True:
+            asteroid_explosions = random.choice(["explosion.wav", "explosion2.wav", "explosion3.wav", "explosion4.wav"])
+            asteroid_explosion_sound = pygame.mixer.Sound(f"assets/{asteroid_explosions}")
+            asteroid_explosion_sound.set_volume(0.2)
             if dt > 0:
                 fps = int(1 / dt)
             else:
@@ -146,16 +151,8 @@ def game_loop():
                     life[-1].kill()
 
             if current_game_state == PLAYING:
-                if configurable_options.SCREEN_WIDTH != last_screen_width or configurable_options.SCREEN_HEIGHT != last_screen_height:
-                    last_screen_width = configurable_options.SCREEN_WIDTH
-                    last_screen_height = configurable_options.SCREEN_HEIGHT
-                    asteroid_field.kill()
-                # Create a copy of options for AsteroidField that enforces logical game size
-                asteroid_field_options = copy.copy(configurable_options)
-                asteroid_field_options.SCREEN_WIDTH = BASE_WIDTH
-                asteroid_field_options.SCREEN_HEIGHT = BASE_HEIGHT
-                asteroid_field = AsteroidField(asteroid_field_options)
-
+                if ship.power != "laser" and laser_timer != 5:
+                    laser_timer = 5
                 log_state()
                 updatable.update(dt)
                 ship.time_alive += dt
@@ -168,8 +165,38 @@ def game_loop():
                     lives.add(life_shape)
                     next_life_score += 25000
                 if ship.lives <= 0:
+                    log_event("game_over")
                     ship.time_alive = 0
                     current_game_state = GAME_OVER
+                for powerup in powerups:
+                    if ship.collides_with(powerup):
+                        if powerup.contents == "1up":
+                            log_event("extra_life")
+                            ship.lives += 1
+                            life_shape = Lives(life_rect.right + 15 + ((ship.lives - 1) * 25), life_rect.centery + 15)
+                            updatable.add(life_shape)
+                            drawable.add(life_shape)
+                            lives.add(life_shape)
+                        elif powerup.contents == "homing":
+                            log_event("homing_missiles_acquired")
+                            ship.power = powerup.contents
+                            ship.ammo += 15
+                        elif powerup.contents == "laser":
+                            log_event("laser_beam_acquired")
+                            ship.power = powerup.contents
+                            ship.laser_timer = 0
+                            laser_timer = 5
+                        powerup.kill()
+                if ship.power == "homing":
+                    ammo_text = ammo_font.render(f"Homing Missiles: {ship.ammo}", True, (255, 255, 255))
+
+                if ship.power == "laser":
+                    laser_timer_counter += dt
+                    if laser_timer_counter >= 1:
+                        laser_timer -= 1
+                        laser_timer_counter = 0
+                    laser_text = ammo_font.render(f"Laser! Time Left: {laser_timer}", True, (255, 255, 255))
+
                 for particle in particles:
                     particle.time_alive += dt
                     if particle.time_alive >= 0.1:
@@ -212,7 +239,7 @@ def game_loop():
                             drawable.add(ship)
                     for bullet in shots:
                         if bullet.collides_with(current_asteroid):
-                            #asteroid_explosion_sound.play()
+                            asteroid_explosion_sound.play()
                             if current_asteroid.child:
                                 if current_asteroid.radius == ASTEROID_MIN_RADIUS:
                                     asteroid_score_bonus = 100
@@ -235,6 +262,10 @@ def game_loop():
                     sprites.draw(game_surface)
                 game_surface.blit(score_text, score_rect)
                 game_surface.blit(life_text, life_rect)
+                if ship.power == "homing":
+                    game_surface.blit(ammo_text, ammo_rect)
+                if ship.power == "laser":
+                    game_surface.blit(laser_text, laser_text_rect)
                 if configurable_options.FPS_COUNTER:
                     if fps >= 50:
                         fps_color = fps_color_1
@@ -253,40 +284,39 @@ def game_loop():
                 score_text = game_font.render(f"Score: {score}", True, (255, 255, 255))
                 screen.blit(scaled_surface, (0,0))
                 pygame.display.flip()
+                dt = clock.tick(60) / 1000
 
             elif current_game_state == PAUSED:
                 log_event("game_paused")
                 pause_result = pause_menu(screen, game_surface, configurable_options, asteroids_theme, game_loop)
-                if pause_result['quit_to_main']:
+                if pause_result.get('quit_to_main'):
                     log_event("quit_game")
-                    return  # Exit game_loop entirely to go to main menu
-
-                elif pause_result['restart_game']:
-                    log_event("game_restarted")
-                    game_is_running = False # Exit inner loop to trigger a restart
-                    continue
-
-                else:  # User resumed from pause menu
+                    return  # Return to main menu
+                elif pause_result.get('restart_game'):
+                    log_event("restarting_game")
+                    current_game_state = PLAYING
+                    break
+                else:
                     current_game_state = PLAYING
                     log_event("game_resumed")
-                    # Reset the clock after unpausing to avoid a large dt spike
                     clock.tick()
 
             elif current_game_state == GAME_OVER:
                 log_event("game_over")
-                # game_over returns True if user wants to quit the application
-                if game_over(screen, configurable_options, score, time_alive):
+                game_over_result = game_over(screen, configurable_options, score, time_alive)
+                if game_over_result["quit_to_menu"]:
+                    current_game_state = MENU
+                    clock.tick()
                     return
-                # Otherwise, the user wants to go to the main menu. Exit the game loop.
-                return
+                if game_over_result["restart_game"]:
+                    current_game_state = PLAYING
+                    break
 
-def main():
-    print(f"Starting Asteroids with pygame version: {pygame.version.ver}\nScreen width: {SCREEN_WIDTH}\nScreen height: {SCREEN_HEIGHT}")
-    pygame.font.init()
-    pygame.display.set_caption("py-Asteroids")
-    while True:
-        run_main_menu(screen, game_surface, configurable_options, asteroids_theme, game_loop)
-        game_loop()
+            elif current_game_state == MENU:
+                if run_main_menu(screen, game_surface, configurable_options, asteroids_theme, game_loop):
+                    return
+                current_game_state = PLAYING
+                clock.tick()
 
 if __name__ == "__main__":
     main()

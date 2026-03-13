@@ -14,22 +14,29 @@ class HomingMissile(Shot):
 
 
     def update(self, dt):
-        from asteroid import Asteroid
-        if self.target and (not self.target.alive() or self.target not in Asteroid.containers[0]):
+        if self.target and not self.target.alive():
             self.target = None
             self.target_found = False
 
         super().update(dt)
         if not self.target_found:
+            from asteroid import Asteroid
+            closest_asteroid = None
+            min_distance = float('inf')
             for asteroid in Asteroid.containers[0]:
-                if self.position.distance_to(asteroid.position) < (self.radius + asteroid.radius) * 3:
-                    self.target_found = True
-                    self.target = asteroid
-                    break
+                distance = self.position.distance_to(asteroid.position)
+                if distance < (self.radius + asteroid.radius) * 3 and distance < min_distance:
+                    min_distance = distance
+                    closest_asteroid = asteroid
+            if closest_asteroid:
+                self.target_found = True
+                self.target = closest_asteroid
         if self.target is not None:
             direction = self.target.position - self.position
             if direction.length() > 0:
                 self.velocity = direction.normalize() * PLAYER_SHOOT_SPEED
+                target_rot = math.degrees(math.atan2(self.velocity.y, self.velocity.x)) - 90
+                self.rotation += (((target_rot - self.rotation + 180) % 360) - 180) * min(1, dt * 8)
 
 class Laser(Shot):
     def __init__(self, x, y, rotation, game_options):
@@ -72,16 +79,16 @@ class Laser(Shot):
         return False
 
 class PowerUp_Box(RectangleShape):
-    def __init__(self, x, y, width, height):
+    def __init__(self, x, y, width, height, game_options):
         super().__init__(x, y, width, height)
+        self.game_options = game_options
         self.time_alive = 0
         self.flicker_timer = 0
         self.flicker = False
+        self.contents = random.choices(["homing","laser","1up"], weights=[85,14,1])[0]
     
     def update(self, dt):
         self.time_alive += dt
-        print(self.time_alive)
-        
 
         if self.time_alive > 20:
             self.kill()
@@ -100,11 +107,32 @@ class PowerUp_Box(RectangleShape):
                 self.flicker_timer = 0
 
     def draw(self, screen):
+        from missileshape import MissileShape
+        from triangleshape import TriangleShape
+        player_width = self.game_options.PLAYER_PIXEL_WIDTH
         super().draw(screen)
         rect = pygame.Rect(0, 0, self.width, self.height)
         rect.center = self.position
         if not self.flicker:
             pygame.draw.rect(screen, self.color, rect, LINE_WIDTH)
-
+            if self.contents == "homing":
+                icon = MissileShape(self.position.x, self.position.y)
+                icon.color = "orange"
+                icon.draw(screen)
+            elif self.contents == "laser":
+                icon1 = TriangleShape((self.vertices[0].x + self.vertices[1].x) / 2, self.position.y - 8, (self.width / 4))
+                icon1.points = icon1.get_world_vertices()
+                icon1.draw = pygame.draw.polygon(screen, "white", icon1.points, player_width)
+                icon2 = pygame.draw.line(screen, "blue", (icon1.points[0].x, icon1.points[0].y), (self.vertices[2] + self.vertices[3]) / 2, 3)
+            elif self.contents == "1up":
+                shift = self.width*0.08
+                gap = max(4, int(self.width*0.08))
+                tri_x = rect.left + gap + (self.width/8) + shift 
+                icon = TriangleShape(tri_x, self.position.y, (self.width / 4))
+                pygame.draw.polygon(screen, "white", icon.get_world_vertices(), player_width) 
+                icon_font = pygame.font.Font(None, max(14, int(self.width*0.52)))
+                txt_surf = icon_font.render("+1", True, (255,255,255))
+                txt_rect = txt_surf.get_rect(midleft=(rect.left + self.width*0.32 + shift, rect.centery))
+                screen.blit(txt_surf, txt_rect)
     
         

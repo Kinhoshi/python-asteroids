@@ -16,7 +16,9 @@ class GameOptions:
         self.BULLETS_COLLIDE_WITH_PLAYER = self.parser.getboolean("GameDifficulty", "BulletsKillPlayer")
         self.CONTROLS_ACCELERATE = self.parser.getint("Controls", "Accelerate")
         self.CONTROLS_ACCELERATE_ALT = self.parser.getint("Controls", "AccelerateAlt")
-        self.CONTROLS_PAUSE = self.parser.getint("Controls", "Pause")
+        self.MOUSE_AIM = self.parser.getboolean("GameSettings", "MouseAim")
+        # 27 is the int value for the escape key in pygame
+        self.CONTROLS_PAUSE = self.parser.getint("Controls", "Pause") if self.parser.getint("Controls", "Pause") != 0 else 27
         self.CONTROLS_PAUSE_ALT = self.parser.getint("Controls", "PauseAlt")
         self.CONTROLS_ROTATE_LEFT = self.parser.getint("Controls", "RotateLeft")
         self.CONTROLS_ROTATE_LEFT_ALT = self.parser.getint("Controls", "RotateLeftAlt")

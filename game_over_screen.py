@@ -7,6 +7,8 @@ from constants import BASE_WIDTH, BASE_HEIGHT, LINE_WIDTH
 from menu import run_main_menu
 
 def game_over(screen, game_options, score, time):
+    scale_x = screen.get_width() / BASE_WIDTH
+    scale_y = screen.get_height() / BASE_HEIGHT
     background = MenuBackground(game_options)
     difficulty = game_options.DIFFICULTY
     high_score_file = f"high_scores_{difficulty}.json"
@@ -23,6 +25,7 @@ def game_over(screen, game_options, score, time):
     menu_option_index = 0
     high_score_list = []
     score_dict = {}
+    action = {"quit_to_menu": False, "restart_game": False}
 
     try:
         with open(high_score_file, "r") as f:
@@ -40,62 +43,66 @@ def game_over(screen, game_options, score, time):
         is_high_score = True
 
     if is_high_score:
-            congrats_font = pygame.font.SysFont(None, 60)
-            congrats_text = congrats_font.render("Congratulations! You set a new high score!", True, white_text)
-            congrats_2nd_line = congrats_font.render("Enter your name below!", True, white_text)
+            congrats_font = pygame.font.SysFont(None, int(60 * scale_y))
+            congrats_text = congrats_font.render("Congratulations! You set a new high score!", True, (255, 0, 0))
+            congrats_2nd_line = congrats_font.render("Enter your name below!", True, (255, 0, 0))
             congrats_rect = congrats_text.get_rect()
             congrats_2nd_line_rect = congrats_2nd_line.get_rect()
-            congrats_rect.center = (pygame.display.Info().current_w // 2, pygame.display.Info().current_h // 2 + 340)
-            congrats_2nd_line_rect.center = (pygame.display.Info().current_w // 2, pygame.display.Info().current_h // 2 + 375)
+            congrats_rect.center = (int(BASE_WIDTH // 2 * scale_x), int((BASE_HEIGHT // 2 + 360) * scale_y))
+            congrats_2nd_line_rect.center = (int(BASE_WIDTH // 2 * scale_x), int((BASE_HEIGHT // 2 + 395) * scale_y))
 
-    game_over_font = pygame.font.SysFont(None, 100)
+    game_over_font = pygame.font.SysFont(None, int(100 * scale_y))
     game_over_text = game_over_font.render("GAME OVER", True, (255, 0, 0))
     game_over_rect = game_over_text.get_rect()
-    game_over_rect.center = (pygame.display.Info().current_w // 2, pygame.display.Info().current_h // 2)
-    score_font = pygame.font.SysFont(None, 40)
+    game_over_rect.center = (int(BASE_WIDTH // 2 * scale_x), int(BASE_HEIGHT // 2 * scale_y))
+    score_font = pygame.font.SysFont(None, int(40 * scale_y))
     score_text = score_font.render(f"Score: {score}", True, white_text)
     time_bonus_text = score_font.render(f"Time Bonus: {time_bonus}", True, white_text)
     score_rect = score_text.get_rect()
-    score_rect.center = (pygame.display.Info().current_w // 2, pygame.display.Info().current_h // 2 + 45)
+    score_rect.center = (int(BASE_WIDTH // 2 * scale_x), int((BASE_HEIGHT // 2 + 45) * scale_y))
     time_bonus_rect = time_bonus_text.get_rect()
-    time_bonus_rect.center = (pygame.display.Info().current_w // 2, pygame.display.Info().current_h // 2 + 70)
+    time_bonus_rect.center = (int(BASE_WIDTH // 2 * scale_x), int((BASE_HEIGHT // 2 + 70) * scale_y))
     final_score_text = score_font.render(f"Final Score: {final_score}", True, white_text)
     final_score_rect = final_score_text.get_rect()
-    final_score_rect.center = (pygame.display.Info().current_w // 2, pygame.display.Info().current_h // 2 + 95)
+    final_score_rect.center = (int(BASE_WIDTH // 2 * scale_x), int((BASE_HEIGHT // 2 + 95) * scale_y))
     time_font = score_font
     time_text = time_font.render(f"Time Survived: {time_converted}", True, white_text)
     time_rect = time_text.get_rect()
-    time_rect.center = (pygame.display.Info().current_w // 2, pygame.display.Info().current_h // 2 + 120)
+    time_rect.center = (int(BASE_WIDTH // 2 * scale_x), int((BASE_HEIGHT // 2 + 120) * scale_y))
     difficulty_text = score_font.render(f"Difficulty: {difficulty}", True, white_text)
     difficulty_rect = difficulty_text.get_rect()
-    difficulty_rect.center = (pygame.display.Info().current_w // 2, pygame.display.Info().current_h // 2 + 150)
-    return_to_menu_font = game_over_font
+    difficulty_rect.center = (int(BASE_WIDTH // 2 * scale_x), int((BASE_HEIGHT // 2 + 150) * scale_y))
+    return_to_menu_font = pygame.font.SysFont(None, int(75 * scale_y))
     return_to_menu_text = return_to_menu_font.render("Quit to Main Menu", True, white_text)
     return_to_menu_rect = return_to_menu_text.get_rect()
-    return_to_menu_rect.center = (pygame.display.Info().current_w // 2, pygame.display.Info().current_h // 2 + 200)
+    return_to_menu_rect.center = (int(BASE_WIDTH // 2 * scale_x), int((BASE_HEIGHT // 2 + 250) * scale_y))
     quit_text = return_to_menu_font.render("Quit to Desktop", True, white_text)
     quit_rect = quit_text.get_rect()
-    quit_rect.center = (pygame.display.Info().current_w // 2, pygame.display.Info().current_h // 2 + 275)
+    quit_rect.center = (int(BASE_WIDTH // 2 * scale_x), int((BASE_HEIGHT // 2 + 300) * scale_y))
+    restart_game_text = return_to_menu_font.render("Restart Game", True, white_text)
+    restart_game_rect = restart_game_text.get_rect()
+    restart_game_rect.center = (int(BASE_WIDTH // 2 * scale_x), int((BASE_HEIGHT // 2 + 200) * scale_y))
     high_score_text = score_font.render("High Scores", True, white_text)
     high_score_rect = high_score_text.get_rect()
-    high_score_rect.center = (80, 15)
+    high_score_rect.center = (int(80 * scale_x), int(15 * scale_y))
 
     while running:
         if is_high_score:
-            high_score_font = pygame.font.SysFont(None, 40)
+            high_score_font = pygame.font.SysFont(None, int(40 * scale_y))
             high_score_input = high_score_font.render(input_text, True, white_text)
             high_score_input_text_rect = high_score_input.get_rect()
-            high_score_input_rect = pygame.Rect(0, 0, 200, high_score_input_text_rect.height + 5)
-            high_score_input_rect.center = (pygame.display.Info().current_w // 2, pygame.display.Info().current_h // 2 + 410)
+            high_score_input_rect = pygame.Rect(0, 0, int(200 * scale_x), high_score_input_text_rect.height + 5)
+            high_score_input_rect.center = (int(BASE_WIDTH // 2 * scale_x), int((BASE_HEIGHT // 2 + 425) * scale_y))
             high_score_input_text_rect.center = high_score_input_rect.center
 
-        menu_option_rects = [return_to_menu_rect, quit_rect, high_score_input_rect] if is_high_score else [return_to_menu_rect, quit_rect]
+        menu_option_rects = [restart_game_rect, return_to_menu_rect, quit_rect, high_score_input_rect] if is_high_score else [restart_game_rect, return_to_menu_rect, quit_rect]
         selected_POS = menu_option_rects[menu_option_index]
         dt = pygame.time.Clock().tick(60) / 1000
         background.draw(screen)
         flicker_timer += dt
         return_to_menu_button = pygame.draw.rect(screen, "gray8", return_to_menu_rect, 0)
         quit_button = pygame.draw.rect(screen, "gray8", quit_rect, 0)
+        restart_game_button = pygame.draw.rect(screen, "gray8", restart_game_rect, 0)
 
         if flicker_timer >= 0.5:
             flicker_draw = not flicker_draw
@@ -123,7 +130,11 @@ def game_over(screen, game_options, score, time):
                         pygame.quit()
                         sys.exit()
                     elif selected_POS == return_to_menu_rect:
-                        return True
+                        action["quit_to_menu"] = True
+                        return action
+                    elif selected_POS == restart_game_rect:
+                        action["restart_game"] = True
+                        return action
                     elif selected_POS == high_score_input_rect:
                         if input_active:
                             input_active = False
@@ -133,7 +144,7 @@ def game_over(screen, game_options, score, time):
                                 "score": final_score,
                                 "time": time_converted,
                             }
-
+                            score_dict["controls"] = "mouse & keyboard" if game_options.MOUSE_AIM else "keyboard"
                             if is_high_score:
                                 high_score_list.append(score_dict)
                                 high_score_list.sort(key=lambda x: int(x["score"]), reverse=True)
@@ -150,15 +161,15 @@ def game_over(screen, game_options, score, time):
                         input_text += event.unicode
 
         high_scores_text = []
-        line_y_pos = 20
+        line_y_pos = int(20 * scale_y)
         for scores in high_score_list:
-            high_scores_text.append(f"{scores['name']} - {scores['score']} - {scores['time']}")
+            high_scores_text.append(f"{scores['name']} - {scores['score']} - {scores['time']} - Controls: {scores['controls']}")
         for lines in high_scores_text:
-            line_font = pygame.font.SysFont(None, 30)
+            line_font = pygame.font.SysFont(None, int(30 * scale_y))
             line_text = line_font.render(lines, True, white_text)
-            line_y_pos += 20
+            line_y_pos += int(20 * scale_y)
             line_rect = line_text.get_rect()
-            line_rect.left = (0)
+            line_rect.left = int(0 * scale_x)
             line_rect.top = line_y_pos
             screen.blit(line_text, line_rect)   
 
@@ -170,6 +181,7 @@ def game_over(screen, game_options, score, time):
         screen.blit(difficulty_text, difficulty_rect)
         screen.blit(return_to_menu_text, return_to_menu_rect)
         screen.blit(quit_text, quit_rect)
+        screen.blit(restart_game_text, restart_game_rect)
         screen.blit(high_score_text, high_score_rect)
         if is_high_score:
             pygame.draw.line(screen, "white", (high_score_input_rect.left, high_score_input_rect.bottom), (high_score_input_rect.right, high_score_input_rect.bottom), LINE_WIDTH)

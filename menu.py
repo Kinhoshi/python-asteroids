@@ -73,6 +73,8 @@ def run_main_menu(screen_obj, game_surface, game_options_obj, theme_obj, game_lo
                 config_parser["GameDifficulty"]["MaxTypesOfAsteroids"] = str(value)
             case 'DIFFICULTY':
                 config_parser["GameDifficulty"]["Difficulty"] = str(value)
+            case "MOUSE_AIM":
+                config_parser["GameSettings"]["MouseAim"] = str(value)
             case _:
                 print("Unknown attribute")
                 return
@@ -328,6 +330,14 @@ def run_main_menu(screen_obj, game_surface, game_options_obj, theme_obj, game_lo
 
 # Pause menu
 def pause_menu(screen_obj, game_surface, game_options_obj, theme_obj, game_loop_func):
+    # Save original containers
+    from asteroid import Asteroid
+    from asteroidfield import AsteroidField
+    from stars import Star
+    old_asteroid_containers = Asteroid.containers
+    old_asteroidfield_containers = AsteroidField.containers
+    old_star_containers = Star.containers
+    
     custom_controller = MyCustomController()
     menu_background = MenuBackground(game_options_obj)
     theme_obj.background_color = (0, 0, 0, 0)
@@ -338,15 +348,15 @@ def pause_menu(screen_obj, game_surface, game_options_obj, theme_obj, game_loop_
     paused_menu.set_controller(custom_controller)
     menus.add(paused_menu)
     
-    action = {'quit_to_main': False,
-    'restart_game': False}
+    action = {'quit_to_main': False, 'restart_game': False}
 
-    def restart_game():
-        action['restart_game'] = True
-        paused_menu.disable()
 
     def quit_to_main(): # function to quit game and return to main menu
         action['quit_to_main'] = True
+        paused_menu.disable()
+
+    def restart_game(): # function to restart game
+        action['restart_game'] = True
         paused_menu.disable()
 
     paused_menu.add.button('Resume', paused_menu.disable)
@@ -385,6 +395,11 @@ def pause_menu(screen_obj, game_surface, game_options_obj, theme_obj, game_loop_
         draw_rebind_overlay(screen_obj, SCREEN_WIDTH, SCREEN_HEIGHT, rebind_font, rebind_esc_font)
 
         pygame.display.flip()
+
+    # Restore original containers
+    Asteroid.containers = old_asteroid_containers
+    AsteroidField.containers = old_asteroidfield_containers
+    Star.containers = old_star_containers
 
     return action
 
@@ -460,6 +475,8 @@ def toggle_fullscreen_and_adjust_screen(screen_obj, game_options_obj): # functio
         configurable_options.parser["VideoSettings"]["Fullscreen"] = "True"
         info = pygame.display.Info()
         resolution = (info.current_w, info.current_h)
+        configurable_options.parser["VideoSettings"]["Width"] = str(resolution[0])
+        configurable_options.parser["VideoSettings"]["Height"] = str(resolution[1])
         screen = pygame.display.set_mode(resolution, pygame.FULLSCREEN)
     elif not is_fullscreen:
         configurable_options.parser["VideoSettings"]["Fullscreen"] = "False"
@@ -500,6 +517,13 @@ def set_resolution(screen_obj, game_options_obj, resolution): # function to set 
     for m in menus:
         m._surface = screen
 
+def mouse_aim(configurable_options, value):
+    configurable_options.parser["GameSettings"]["MouseAim"] = str(value)
+    configurable_options.MOUSE_AIM = value
+    with open("config.ini", "w") as configfile:
+        configurable_options.parser.write(configfile)
+
+
 def control_options_menu(screen_obj, game_options_obj, theme_obj):
     configurable_options = game_options_obj
     SCREEN_WIDTH = configurable_options.SCREEN_WIDTH
@@ -528,5 +552,6 @@ def control_options_menu(screen_obj, game_options_obj, theme_obj):
     add_bind_btn('Shoot Alt', "shootalt", "CONTROLS_SHOOT_ALT")
     add_bind_btn('Pause', "pause", "CONTROLS_PAUSE")
     add_bind_btn('Pause Alt', "pausealt", "CONTROLS_PAUSE_ALT")
+    controls_menu.add.selector('Mouse Aim', [('On', True), ('Off', False)], default=0 if configurable_options.MOUSE_AIM == True else 1, onchange=lambda item, value: mouse_aim(game_options_obj, value))
     controls_menu.add.button('Back', pygame_menu.events.BACK)
     return controls_menu
