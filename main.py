@@ -53,7 +53,7 @@ def main():
     pygame.font.init()
     pygame.display.set_caption("py-Asteroids")
     if any(str(getattr(configurable_options, n, "")) == "0" for n in ("CONTROLS_ACCELERATE","CONTROLS_ROTATE_LEFT","CONTROLS_ROTATE_RIGHT","CONTROLS_SHOOT")):
-        control_options_menu(screen, game_surface, configurable_options, asteroids_theme, run_main_menu, run_loop=True)
+        control_options_menu(screen, game_surface, configurable_options, asteroids_theme, run_main_menu, game_loop, run_loop=True)
     else:
         run_main_menu(screen, game_surface, configurable_options, asteroids_theme, game_loop)
 

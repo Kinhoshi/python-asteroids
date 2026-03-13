@@ -185,7 +185,7 @@ def run_main_menu(screen_obj, game_surface, game_options_obj, theme_obj, game_lo
         options_menu.add.button('Difficulty Settings', difficulty_menu_internal())
         options_menu.add.button('Object Options', objects_sub_menu_internal())
         options_menu.add.button('Video Options', video_options(screen_obj, game_options_obj, theme_obj))
-        options_menu.add.button('Control Settings', control_options_menu(screen_obj, game_surface, game_options_obj, theme_obj, None, run_loop=False))
+        options_menu.add.button('Control Settings', control_options_menu(screen_obj, game_surface, game_options_obj, theme_obj, None, game_loop_func, run_loop=False))
         options_menu.add.button('Back', pygame_menu.events.BACK)
         return options_menu
 
@@ -360,7 +360,7 @@ def pause_menu(screen_obj, game_surface, game_options_obj, theme_obj, game_loop_
 
     paused_menu.add.button('Resume', paused_menu.disable)
     paused_menu.add.button('Video Options', video_options(screen_obj, game_options_obj, theme_obj))
-    paused_menu.add.button('Control Settings', control_options_menu(screen_obj, game_surface, game_options_obj, theme_obj, None, run_loop=False))
+    paused_menu.add.button('Control Settings', control_options_menu(screen_obj, game_surface, game_options_obj, theme_obj, None, game_loop_func, run_loop=False))
     paused_menu.add.button('Restart Game', restart_game)
     paused_menu.add.button('Quit to Main Menu', quit_to_main)
     paused_menu.add.button('Quit to Desktop', lambda: (pygame.quit(), sys.exit()))
@@ -523,9 +523,7 @@ def mouse_aim(configurable_options, value):
         configurable_options.parser.write(configfile)
 
 
-def control_options_menu(screen_obj, game_surface_obj, game_options_obj, theme_obj, menu_func, run_loop=False):
-    from main import game_loop
-    
+def control_options_menu(screen_obj, game_surface_obj, game_options_obj, theme_obj, menu_func, game_loop_func, run_loop=False):
     custom_controller = MyCustomController()
     menu_background = MenuBackground(game_options_obj)
     asteroids_theme = theme_obj
@@ -557,7 +555,7 @@ def control_options_menu(screen_obj, game_surface_obj, game_options_obj, theme_o
     add_bind_btn('Pause', "pause", "CONTROLS_PAUSE")
     add_bind_btn('Pause Alt', "pausealt", "CONTROLS_PAUSE_ALT")
     controls_menu.add.selector('Mouse Aim', [('On', True), ('Off', False)], default=0 if configurable_options.MOUSE_AIM == True else 1, onchange=lambda item, value: mouse_aim(game_options_obj, value))
-    controls_menu.add.button('Back', pygame_menu.events.BACK if not run_loop else lambda: menu_func(screen_obj, game_surface_obj, game_options_obj, theme_obj, game_loop))
+    controls_menu.add.button('Back', pygame_menu.events.BACK if not run_loop else lambda: menu_func(screen_obj, game_surface_obj, game_options_obj, theme_obj, game_loop_func))
 
     if run_loop:
         menu_background = MenuBackground(configurable_options)
