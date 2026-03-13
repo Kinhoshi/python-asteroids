@@ -36,7 +36,6 @@ def draw_rebind_overlay(screen, screen_width, screen_height, font, esc_font):
     screen.blit(esc_text_surface, esc_text_rect)
 
 def run_main_menu(screen_obj, game_surface, game_options_obj, theme_obj, game_loop_func):
-
     screen = screen_obj
     surface = game_surface
     configurable_options = game_options_obj
@@ -186,7 +185,7 @@ def run_main_menu(screen_obj, game_surface, game_options_obj, theme_obj, game_lo
         options_menu.add.button('Difficulty Settings', difficulty_menu_internal())
         options_menu.add.button('Object Options', objects_sub_menu_internal())
         options_menu.add.button('Video Options', video_options(screen_obj, game_options_obj, theme_obj))
-        options_menu.add.button('Control Settings', control_options_menu(screen_obj, game_options_obj, theme_obj))
+        options_menu.add.button('Control Settings', control_options_menu(screen_obj, game_surface, game_options_obj, theme_obj, None, run_loop=False))
         options_menu.add.button('Back', pygame_menu.events.BACK)
         return options_menu
 
@@ -361,7 +360,7 @@ def pause_menu(screen_obj, game_surface, game_options_obj, theme_obj, game_loop_
 
     paused_menu.add.button('Resume', paused_menu.disable)
     paused_menu.add.button('Video Options', video_options(screen_obj, game_options_obj, theme_obj))
-    paused_menu.add.button('Control Settings', control_options_menu(screen_obj, game_options_obj, theme_obj))
+    paused_menu.add.button('Control Settings', control_options_menu(screen_obj, game_surface, game_options_obj, theme_obj, None, run_loop=False))
     paused_menu.add.button('Restart Game', restart_game)
     paused_menu.add.button('Quit to Main Menu', quit_to_main)
     paused_menu.add.button('Quit to Desktop', lambda: (pygame.quit(), sys.exit()))
@@ -524,11 +523,16 @@ def mouse_aim(configurable_options, value):
         configurable_options.parser.write(configfile)
 
 
-def control_options_menu(screen_obj, game_options_obj, theme_obj):
-    configurable_options = game_options_obj
-    SCREEN_WIDTH = configurable_options.SCREEN_WIDTH
-    SCREEN_HEIGHT = configurable_options.SCREEN_HEIGHT
+def control_options_menu(screen_obj, game_surface_obj, game_options_obj, theme_obj, menu_func, run_loop=False):
+    from main import game_loop
+    
+    custom_controller = MyCustomController()
+    menu_background = MenuBackground(game_options_obj)
     asteroids_theme = theme_obj
+    asteroids_theme.background_color = (0, 0, 0, 0)
+    SCREEN_WIDTH = game_options_obj.SCREEN_WIDTH
+    SCREEN_HEIGHT = game_options_obj.SCREEN_HEIGHT
+    configurable_options = game_options_obj
 
     controls_menu = pygame_menu.Menu('Control Settings', SCREEN_WIDTH, SCREEN_HEIGHT, theme=asteroids_theme)
     menus.add(controls_menu)
@@ -553,5 +557,37 @@ def control_options_menu(screen_obj, game_options_obj, theme_obj):
     add_bind_btn('Pause', "pause", "CONTROLS_PAUSE")
     add_bind_btn('Pause Alt', "pausealt", "CONTROLS_PAUSE_ALT")
     controls_menu.add.selector('Mouse Aim', [('On', True), ('Off', False)], default=0 if configurable_options.MOUSE_AIM == True else 1, onchange=lambda item, value: mouse_aim(game_options_obj, value))
-    controls_menu.add.button('Back', pygame_menu.events.BACK)
+    controls_menu.add.button('Back', pygame_menu.events.BACK if not run_loop else lambda: menu_func(screen_obj, game_surface_obj, game_options_obj, theme_obj, game_loop))
+
+    if run_loop:
+        menu_background = MenuBackground(configurable_options)
+        asteroids_theme.background_color = (0, 0, 0, 0)
+        rebind_font = pygame.font.SysFont(None, 40)
+        rebind_esc_font = pygame.font.SysFont(None, 30)
+
+        while controls_menu.is_enabled():
+            events_for_menu = pygame.event.get()
+            
+            for event in events_for_menu:
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+
+            if controls.waiting_for_key:
+                for event in events_for_menu:
+                    if controls.handle_input_event(event, configurable_options.parser, configurable_options):
+                        for widget in controls_menu.get_widgets():
+                            if hasattr(widget, 'update_binding_display'):
+                                widget.update_binding_display()
+                        break
+                events_for_menu = []
+            
+            controls_menu.update(events_for_menu)
+
+            menu_background.draw(screen_obj)
+            if controls_menu.is_enabled():
+                controls_menu.draw(screen_obj)
+            draw_rebind_overlay(screen_obj, SCREEN_WIDTH, SCREEN_HEIGHT, rebind_font, rebind_esc_font)
+            
+            pygame.display.flip()
     return controls_menu

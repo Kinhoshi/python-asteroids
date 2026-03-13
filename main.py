@@ -11,7 +11,7 @@ from config import GameOptions
 from constants import BASE_WIDTH, BASE_HEIGHT, ASTEROID_MIN_RADIUS
 from game_over_screen import game_over
 from logger import log_state, log_event
-from menu import run_main_menu, pause_menu
+from menu import run_main_menu, pause_menu, control_options_menu
 from octagonshape import OctagonShape
 from player import Player
 from player_lives import Lives
@@ -52,7 +52,10 @@ def main():
     print(f"Starting Asteroids with pygame version: {pygame.version.ver}\nScreen width: {SCREEN_WIDTH}\nScreen height: {SCREEN_HEIGHT}")
     pygame.font.init()
     pygame.display.set_caption("py-Asteroids")
-    run_main_menu(screen, game_surface, configurable_options, asteroids_theme, game_loop)
+    if any(str(getattr(configurable_options, n, "")) == "0" for n in ("CONTROLS_ACCELERATE","CONTROLS_ROTATE_LEFT","CONTROLS_ROTATE_RIGHT","CONTROLS_SHOOT")):
+        control_options_menu(screen, game_surface, configurable_options, asteroids_theme, run_main_menu, run_loop=True)
+    else:
+        run_main_menu(screen, game_surface, configurable_options, asteroids_theme, game_loop)
 
 def game_loop():
     while True:

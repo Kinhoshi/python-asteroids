@@ -1,7 +1,7 @@
 [project]
 name = "python-asteroids"
-version = "0.1.0"
-description = "Add your description here"
+version = "0.5.0"
+description = "Asteroids clone remade in Python language with a few modern twists"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
